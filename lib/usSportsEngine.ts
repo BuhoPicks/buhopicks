@@ -2,7 +2,7 @@ import { Parlay } from './parlayEngine';
 
 
 async function fetchAndProcessExp(url: string, sportName: string, icon: string): Promise<any[]> {
-  const res = await fetch(url, { next: { revalidate: 3600 } }).catch(() => null);
+  const res = await fetch(url, { cache: 'no-store' }).catch(() => null);
   const data = res && res.ok ? await res.json() : { events: [] };
   const picks: any[] = [];
   
@@ -87,11 +87,11 @@ async function fetchAndProcessExp(url: string, sportName: string, icon: string):
 
 export async function getBasketballParlay(dateStr: string): Promise<Parlay | null> {
   try {
-    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard`;
+    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${dateStr}`;
     const moneylinePicks = await fetchAndProcessExp(url, 'basketball', '🏀');
     
     // Also generate player props from the same data
-    const propPicks = await generateNBAPlayerProps();
+    const propPicks = await generateNBAPlayerProps(dateStr);
     
     const allPicks = [...moneylinePicks, ...propPicks];
     if (allPicks.length < 1) return null;
@@ -112,9 +112,10 @@ export async function getBasketballParlay(dateStr: string): Promise<Parlay | nul
   }
 }
 
-async function generateNBAPlayerProps(): Promise<any[]> {
+async function generateNBAPlayerProps(dateStr: string): Promise<any[]> {
   try {
-    const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard', { next: { revalidate: 3600 } }).catch(() => null);
+    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${dateStr}`;
+    const res = await fetch(url, { cache: 'no-store' }).catch(() => null);
     if (!res || !res.ok) return [];
     const data = await res.json();
     const props: any[] = [];
@@ -225,7 +226,7 @@ async function generateNBAPlayerProps(): Promise<any[]> {
 
 export async function getBaseballParlay(dateStr: string): Promise<Parlay | null> {
   try {
-    const url = `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard`;
+    const url = `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=${dateStr}`;
     const picks = await fetchAndProcessExp(url, 'baseball', '⚾');
     if (picks.length < 1) return null;
 
