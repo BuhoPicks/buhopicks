@@ -701,7 +701,7 @@ export async function runDailyTennisSync(): Promise<{
 
         // Generate and filter picks
         const rawPicks   = generatePicks(p1, p2, analysis, surface, circuit);
-        const goodPicks  = filterAndRankPicks(rawPicks, -0.05); // Include near-value high confidence picks
+        const goodPicks  = filterAndRankPicks(rawPicks, -0.08); // Include more picks with reasonable stats
 
         // FILTER: Keep only ATP/WTA/Challenger (No ITF usually on Stake) and no doubles ("/")
         if (tournamentLevel !== 'ITF' && !p1.name.includes('/')) {
@@ -756,16 +756,16 @@ export async function runDailyTennisSync(): Promise<{
     selectedPicks.push(...entries.slice(0, 8));
   }
 
-  // If we still have room (< 30), fill with remaining best picks
-  if (selectedPicks.length < 30) {
+  // If we still have room (< 50), fill with remaining best picks
+  if (selectedPicks.length < 50) {
     const selectedIds = new Set(selectedPicks.map(p => `${p.matchId}-${p.pick.market}-${p.pick.selection}`));
     const remaining = pickBuffer
       .filter(p => !selectedIds.has(`${p.matchId}-${p.pick.market}-${p.pick.selection}`))
       .sort((a, b) => b.pick.expectedValue - a.pick.expectedValue);
-    selectedPicks.push(...remaining.slice(0, 30 - selectedPicks.length));
+    selectedPicks.push(...remaining.slice(0, 50 - selectedPicks.length));
   }
 
-  const top30Picks = selectedPicks.slice(0, 32); // Allow slightly more for coverage
+  const top30Picks = selectedPicks.slice(0, 50); // Allow more picks for coverage
 
   let bestPickId: string | null = null;
   let bestPickEV = -Infinity;

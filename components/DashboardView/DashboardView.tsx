@@ -15,10 +15,12 @@ type SportFilter = 'tennis' | 'football' | 'basketball' | 'baseball';
 type SortFilter = 'relevance' | 'time';
 
 async function getTennisMatches(day: DayFilter, sortBy: SortFilter) {
-  const now   = new Date();
-  const base  = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const start = day === 'tomorrow' ? new Date(base.getTime() + 86400000) : base;
-  const end   = new Date(start.getTime() + 86400000);
+  const mxOffset = -6 * 60 * 60 * 1000;
+  const now = new Date();
+  const mxTime = new Date(now.getTime() + mxOffset);
+  const baseUTC = new Date(Date.UTC(mxTime.getUTCFullYear(), mxTime.getUTCMonth(), mxTime.getUTCDate()));
+  const start = new Date(baseUTC.getTime() - mxOffset + (day === 'tomorrow' ? 86400000 : 0));
+  const end = new Date(start.getTime() + 86400000);
 
   const matches = await prisma.tennisMatch.findMany({
     where: { date: { gte: start, lt: end } },
@@ -39,10 +41,12 @@ async function getTennisMatches(day: DayFilter, sortBy: SortFilter) {
 }
 
 async function getFootballMatches(day: DayFilter, sortBy: SortFilter) {
-  const now   = new Date();
-  const base  = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const start = day === 'tomorrow' ? new Date(base.getTime() + 86400000) : base;
-  const end   = new Date(start.getTime() + 86400000);
+  const mxOffset = -6 * 60 * 60 * 1000;
+  const now = new Date();
+  const mxTime = new Date(now.getTime() + mxOffset);
+  const baseUTC = new Date(Date.UTC(mxTime.getUTCFullYear(), mxTime.getUTCMonth(), mxTime.getUTCDate()));
+  const start = new Date(baseUTC.getTime() - mxOffset + (day === 'tomorrow' ? 86400000 : 0));
+  const end = new Date(start.getTime() + 86400000);
 
   const matches = await prisma.footballMatch.findMany({
     where: { date: { gte: start, lt: end } },
@@ -178,7 +182,7 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
         uniqueMatchPicks.push(pick);
         seenMatches.add(pick.parentMatch.id);
       }
-      if (uniqueMatchPicks.length >= 5) break;
+      if (uniqueMatchPicks.length >= 8) break;
     }
     return { ...slot, picks: uniqueMatchPicks };
   }) : [];
