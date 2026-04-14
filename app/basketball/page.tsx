@@ -1,6 +1,6 @@
 import DashboardView from '@/components/DashboardView/DashboardView';
 
-export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 export default async function BasketballPage({
   searchParams,

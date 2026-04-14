@@ -2,7 +2,7 @@ import prisma from '@/lib/prisma';
 import styles from './history.module.css';
 import Link from 'next/link';
 
-export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 export default async function HistoryPage() {
   const tennisHistory = await prisma.tennisPick.findMany({

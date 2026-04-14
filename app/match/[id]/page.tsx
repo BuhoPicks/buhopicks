@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import styles from './page.module.css';
 
-export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 const MARKET_LABELS: Record<string, string> = {
   MATCH_WINNER:     '🏆 Ganador del Partido',

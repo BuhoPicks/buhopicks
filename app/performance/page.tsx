@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import styles from './page.module.css';
 
-export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 export default async function PerformancePage() {
   const allPicks = await prisma.tennisPick.findMany({
