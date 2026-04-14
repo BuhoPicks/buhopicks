@@ -3,14 +3,20 @@ import { PrismaLibSQL } from '@prisma/adapter-libsql'
 import { createClient } from '@libsql/client'
 
 const prismaClientSingleton = () => {
-  if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
-    const libsql = createClient({
-      url: process.env.TURSO_DATABASE_URL,
-      authToken: process.env.TURSO_AUTH_TOKEN,
-    })
-    const adapter = new PrismaLibSQL(libsql)
-    return new PrismaClient({ adapter })
+  const url = process.env.TURSO_DATABASE_URL
+  const authToken = process.env.TURSO_AUTH_TOKEN
+
+  if (url && authToken) {
+    try {
+      const libsql = createClient({ url, authToken })
+      const adapter = new PrismaLibSQL(libsql)
+      return new PrismaClient({ adapter })
+    } catch (e) {
+      console.error("Prisma Turso adapter failed, falling back to default", e)
+      return new PrismaClient()
+    }
   }
+  
   return new PrismaClient()
 }
 
@@ -23,4 +29,5 @@ const prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
 export default prisma
 
 if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma
+
 
