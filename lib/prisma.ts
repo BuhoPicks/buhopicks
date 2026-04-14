@@ -6,18 +6,13 @@ const prismaClientSingleton = () => {
   const url = process.env.TURSO_DATABASE_URL
   const authToken = process.env.TURSO_AUTH_TOKEN
 
-  if (url && authToken) {
-    try {
-      const libsql = createClient({ url, authToken })
-      const adapter = new PrismaLibSql(libsql)
-      return new PrismaClient({ adapter })
-    } catch (e) {
-      console.error("Prisma Turso adapter failed, falling back to default", e)
-      return new PrismaClient()
-    }
+  if (!url || !authToken) {
+    throw new Error(`Missing TURSO_DATABASE_URL or TURSO_AUTH_TOKEN. url: ${!!url}, token: ${!!authToken}`);
   }
-  
-  return new PrismaClient()
+
+  const libsql = createClient({ url, authToken })
+  const adapter = new PrismaLibSql(libsql)
+  return new PrismaClient({ adapter })
 }
 
 declare const globalThis: {
