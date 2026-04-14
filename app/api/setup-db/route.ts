@@ -1,4 +1,4 @@
-import { createClient } from '@libsql/client/web';
+import { createClient } from '@libsql/client';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
