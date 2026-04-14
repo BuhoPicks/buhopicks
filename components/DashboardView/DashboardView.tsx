@@ -98,7 +98,11 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
     parlays.push(...footballOnly.filter(p => p.picks.every((pk: any) => pk.sport === 'football' || !pk.sport)));
   }
   
-  const dateStr = day === 'today' ? new Date().toISOString().split('T')[0].replace(/-/g, '') : new Date(new Date().getTime() + 86400000).toISOString().split('T')[0].replace(/-/g, '');
+  const mxOffsetDateStr = -6 * 60 * 60 * 1000;
+  const nowForStr = new Date();
+  const mxTimeStr = new Date(nowForStr.getTime() + mxOffsetDateStr);
+  const mxTomTimeStr = new Date(nowForStr.getTime() + mxOffsetDateStr + 86400000);
+  const dateStr = day === 'today' ? mxTimeStr.toISOString().split('T')[0].replace(/-/g, '') : mxTomTimeStr.toISOString().split('T')[0].replace(/-/g, '');
   
   if (sport === 'basketball') {
     const nbaParlay = await getBasketballParlay(dateStr);
