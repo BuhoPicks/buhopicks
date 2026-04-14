@@ -1,6 +1,3 @@
-// BH Analysis — Tennis Analytics Platform Schema
-// Learn more: https://pris.ly/d/prisma-schema
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -45,44 +42,38 @@ model Subscription {
   createdAt       DateTime  @default(now())
 }
 
-
 // ─── Tennis Match ─────────────────────────────────────────────────────────────
 model TennisMatch {
   id             String   @id @default(cuid())
   espnId         String?  @unique
   
-  // Players
   player1Name    String
   player2Name    String
-  player1Ranking Int?     // ATP/WTA ranking
+  player1Ranking Int?
   player2Ranking Int?
   player1Country String?
   player2Country String?
   
-  // Tournament Info
   tournament     String
   tournamentId   String?
-  circuit        String   @default("ATP")   // ATP, WTA, Challenger, ITF
-  round          String?                     // R128, R64, R32, R16, QF, SF, F
-  surface        String   @default("Hard")  // Hard, Clay, Grass, Carpet
-  tournamentLevel String  @default("250")   // GS, Masters, 500, 250, Challenger, ITF
+  circuit        String   @default("ATP")
+  round          String?
+  surface        String   @default("Hard")
+  tournamentLevel String  @default("250")
   city           String?
   country        String?
   indoor         Boolean  @default(false)
   
-  // Schedule
   date           DateTime
-  status         String   @default("SCHEDULED") // SCHEDULED, LIVE, FINISHED, CANCELLED, DELAYED
+  status         String   @default("SCHEDULED")
   
-  // Result (filled after match)
-  result         String?  // e.g. "Player1 6-4 6-3"
-  winnerId       String?  // "player1" or "player2"
+  result         String?
+  winnerId       String?
   score          String?
-  sets           Int?     // number of sets played
-  totalGames     Int?     // total games played
-  duration       Int?     // minutes
+  sets           Int?
+  totalGames     Int?
+  duration       Int?
   
-  // Metadata
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   
@@ -90,111 +81,92 @@ model TennisMatch {
   syncLogId      String?
 }
 
-// ─── Tennis Pick ──────────────────────────────────────────────────────────────
 model TennisPick {
   id              String   @id @default(cuid())
   matchId         String
   match           TennisMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
   
-  // Pick Definition
-  market          String   // MATCH_WINNER, GAMES_OVER_UNDER, GAMES_HANDICAP, SET_WINNER, TOTAL_SETS, FIRST_SET_WINNER
-  selection       String   // e.g. "Player1", "Over 21.5", "Player1 -3.5", "2 Sets"
-  description     String   // Human readable: "Djokovic ganador del partido"
+  market          String
+  selection       String
+  description     String
   
-  // Odds & Value
-  odds            Float    // Cuota estimada de mercado
-  trueOdds        Float    // Cuota justa según modelo
-  estimatedProb   Float    // Probabilidad estimada 0-1
-  expectedValue   Float    // EV = prob * odds - 1 (e.g. 0.08 = 8% value)
+  odds            Float
+  trueOdds        Float
+  estimatedProb   Float
+  expectedValue   Float
   
-  // Confidence
-  confidenceScore Int      // 0-100
-  valueLabel      String   @default("MEDIUM") // LOW, MEDIUM, HIGH, PREMIUM
-  isPremiumPick   Boolean  @default(false)  // Best pick of the day
+  confidenceScore Int
+  valueLabel      String   @default("MEDIUM")
+  isPremiumPick   Boolean  @default(false)
   
-  // Analysis
-  explanation     String   // Brief explanation
-  statsBreakdown  String?  // JSON with detailed stat breakdown
+  explanation     String
+  statsBreakdown  String?
   
-  // Result
-  status          String   @default("PENDING")  // PENDING, WON, LOST, VOID, CANCELLED
+  status          String   @default("PENDING")
   settledAt       DateTime?
   
-  // History
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
   historyEntry    PickHistory?
 }
 
-// ─── Pick History (tracking results) ─────────────────────────────────────────
 model PickHistory {
   id              String   @id @default(cuid())
   pickId          String   @unique
   pick            TennisPick @relation(fields: [pickId], references: [id], onDelete: Cascade)
   
-  result          String   // WON, LOST, VOID
-  odds            Float    // Odds at time of bet
-  stake           Float    @default(1.0)   // Units staked
-  profit          Float    // Profit/loss in units
+  result          String
+  odds            Float
+  stake           Float    @default(1.0)
+  profit          Float
   
   notes           String?
   settledAt       DateTime @default(now())
 }
 
-// ─── Player Stats Cache ────────────────────────────────────────────────────────
 model PlayerStats {
   id              String   @id @default(cuid())
   playerName      String   @unique
   circuit         String   @default("ATP")
   
-  // Rankings
   currentRanking  Int?
   peakRanking     Int?
   rankingPoints   Int?
   
-  // Career
-  winRate         Float?   // career win rate 0-1
-  surfaceWinRates String?  // JSON: {hard: 0.65, clay: 0.72, grass: 0.60}
+  winRate         Float?
+  surfaceWinRates String?
   
-  // Recent form (last 5 and 10 matches)
-  form5           String?  // "WWLWW"
-  form10          String?  // "WWLWWLWWLW"
-  formScore       Float?   // Calculated score
+  form5           String?
+  form10          String?
+  formScore       Float?
   
-  // Service stats
-  firstServePerc  Float?   // e.g. 0.65
-  firstServeWon   Float?   // e.g. 0.78
-  secondServeWon  Float?   // e.g. 0.55
-  acesPer100      Float?   // aces per 100 service points
-  dfPer100        Float?   // double faults per 100 service points
+  firstServePerc  Float?
+  firstServeWon   Float?
+  secondServeWon  Float?
+  acesPer100      Float?
+  dfPer100        Float?
   
-  // Return stats
-  returnWon       Float?   // return points won
+  returnWon       Float?
   
-  // Break points
-  bpConverted     Float?   // 0-1
-  bpSaved         Float?   // 0-1
+  bpConverted     Float?
+  bpSaved         Float?
   
-  // Surface specialists
   isClayCourt     Boolean  @default(false)
   isGrassCourt    Boolean  @default(false)
   isHardCourt     Boolean  @default(false)
   
-  // Tournament performance
   grandSlamWinRate Float?
   masters1000Rate  Float?
   
-  // Physical
   isInjured       Boolean  @default(false)
   injuryNote      String?
-  daysLastMatch   Int?     // Days since last match (fatigue)
+  daysLastMatch   Int?
   
   updatedAt       DateTime @updatedAt
   createdAt       DateTime @default(now())
 }
 
-// ─── Head to Head Cache ───────────────────────────────────────────────────────
 model H2HRecord {
   id              String   @id @default(cuid())
   player1Name     String
@@ -204,7 +176,6 @@ model H2HRecord {
   player1Wins     Int      @default(0)
   player2Wins     Int      @default(0)
   
-  // Surface specific
   hardWinsP1      Int      @default(0)
   hardWinsP2      Int      @default(0)
   clayWinsP1      Int      @default(0)
@@ -221,7 +192,6 @@ model H2HRecord {
   @@unique([player1Name, player2Name])
 }
 
-// ─── Football Match ───────────────────────────────────────────────────────────
 model FootballMatch {
   id             String   @id @default(cuid())
   espnId         String?  @unique
@@ -245,14 +215,13 @@ model FootballMatch {
   picks          FootballPick[]
 }
 
-// ─── Football Pick ────────────────────────────────────────────────────────────
 model FootballPick {
   id              String   @id @default(cuid())
   matchId         String
   match           FootballMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
   
-  market          String   // 1X2, OVER_UNDER, BTTS, HANDICAP
-  selection       String   // "Home", "X", "Away", "Over 2.5", etc.
+  market          String
+  selection       String
   description     String
   
   odds            Float
@@ -271,42 +240,37 @@ model FootballPick {
   updatedAt       DateTime @updatedAt
 }
 
-// ─── Daily Sync Log ────────────────────────────────────────────────────────────
 model DailySyncLog {
   id              String   @id @default(cuid())
   syncedAt        DateTime @default(now())
-  status          String   // SUCCESS, PARTIAL, FAILED
-  sport           String   @default("TENNIS") // TENNIS, FOOTBALL
+  status          String
+  sport           String   @default("TENNIS")
   matchesFound    Int      @default(0)
   picksGenerated  Int      @default(0)
   premiumPicks    Int      @default(0)
-  circuits        String?  // JSON array of circuits/leagues synced
+  circuits        String?
   errorMessage    String?
   durationMs      Int?
 }
 
-// ─── User Preferences ─────────────────────────────────────────────────────────
 model UserPreferences {
   id              String   @id @default(cuid())
-  
-  // Sport toggles
+  userId          String?  @unique
+  user            User?    @relation(fields: [userId], references: [id])
+
   showTennis      Boolean  @default(true)
   showFootball    Boolean  @default(true)
-
-  // Circuit filters
   showATP         Boolean  @default(true)
   showWTA         Boolean  @default(true)
   showChallenger  Boolean  @default(true)
   showITF         Boolean  @default(false)
   
-  // Risk profile
-  riskProfile     String   @default("BALANCED") // CONSERVATIVE, BALANCED, AGGRESSIVE
+  riskProfile     String   @default("BALANCED")
   minConfidence   Int      @default(60)
   minOdds         Float    @default(1.50)
   maxOdds         Float    @default(5.00)
   minEV           Float    @default(0.03)
   
-  // Notifications
   emailAlerts     Boolean  @default(false)
   telegramAlerts  Boolean  @default(false)
   pushAlerts      Boolean  @default(false)
