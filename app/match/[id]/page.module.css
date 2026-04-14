@@ -1,0 +1,333 @@
+.page { max-width: 900px; }
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.25rem;
+  transition: var(--transition);
+  font-weight: 500;
+}
+.backLink:hover { color: var(--text-primary); }
+
+/* ── Match Header ── */
+.matchHeader { padding: 1.5rem; margin-bottom: 1.5rem; }
+
+.headerMeta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.tournamentName {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.matchup {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.player { flex: 1; min-width: 0; }
+.playerRight { text-align: right; }
+
+.playerNameLarge {
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerRank {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.playerRight .playerRank { justify-content: flex-end; }
+
+.country { color: var(--text-muted); font-size: 0.78rem; font-family: inherit; }
+
+.playerStat {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.matchupCenter {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.vsCircle {
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.70rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.matchTime {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ── Stats comparison ── */
+.statsGrid {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.simulatedNotice {
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.1);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.simulatedNotice strong {
+  color: #FBBF24;
+}
+
+.statRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.statVal {
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  width: 60px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.statValRight { text-align: left; }
+
+.statBarSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statLabel {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.dualBar {
+  display: flex;
+  height: 5px;
+  border-radius: 999px;
+  overflow: hidden;
+  gap: 2px;
+}
+
+.dualBarFill {
+  border-radius: 999px;
+  transition: width 0.8s var(--ease);
+}
+.dualBarFill2 {
+  border-radius: 999px;
+  transition: width 0.8s var(--ease);
+}
+
+/* ── Picks ── */
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.picksGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pickCard {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  transition: var(--transition);
+}
+
+.pickCard:hover { border-color: var(--border-hover); }
+
+.pickPremium {
+  background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.03));
+  border-color: rgba(245,158,11,0.25);
+  animation: pulse-gold 3s ease-in-out infinite;
+}
+
+.premiumBanner {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--premium);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pickHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.625rem;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pickMarket { font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); }
+
+.pickSelection {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.pickNumbers {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.875rem;
+}
+
+.pickNum { text-align: center; }
+
+.pickNumVal {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.pickNumLabel {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.confRow { margin-bottom: 1rem; }
+.confBarWrap {
+  height: 5px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.confBar {
+  height: 100%;
+  border-radius: 999px;
+  width: var(--target-width, 0%);
+  animation: progress-fill 0.8s var(--ease) forwards;
+}
+@keyframes progress-fill {
+  from { width: 0; }
+  to   { width: var(--target-width, 0%); }
+}
+.conf-premium { background: linear-gradient(90deg, #D97706, #F59E0B); }
+.conf-high    { background: linear-gradient(90deg, #16A34A, #22C55E); }
+.conf-medium  { background: linear-gradient(90deg, #B45309, #F59E0B); }
+.conf-low     { background: linear-gradient(90deg, #B91C1C, #EF4444); }
+
+.explanation {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.875rem;
+}
+
+.explainTitle {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.explainText {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.fairOdds {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.noPicks {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 600px) {
+  .matchup { flex-direction: column; }
+  .playerRight { text-align: left; }
+  .playerRight .playerRank { justify-content: flex-start; }
+  .pickNumbers { grid-template-columns: repeat(2, 1fr); }
+}

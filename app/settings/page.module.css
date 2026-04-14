@@ -1,0 +1,95 @@
+.page { max-width: 800px; }
+
+.pageHeader { margin-bottom: 2rem; }
+.pageTitle { font-size: 2rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 0.25rem; }
+.pageSubtitle { font-size: 0.875rem; color: var(--text-secondary); }
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.section {
+  padding: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.sectionDesc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.riskGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.riskBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.riskBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.riskBtnActive {
+  background: var(--brand-dim);
+  border-color: var(--brand);
+}
+
+.riskIcon { font-size: 1.5rem; }
+.riskName { font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); }
+.riskBtnActive .riskName { color: var(--brand); }
+
+.toggleList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toggleItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.itemIcon { font-size: 1.25rem; }
+.itemLabel { font-size: 0.938rem; font-weight: 600; flex: 1; }
+.itemText { flex: 1; }
+.itemSub { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+.toggleItem input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.footer {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 600px) {
+  .riskGrid { grid-template-columns: 1fr; }
+}

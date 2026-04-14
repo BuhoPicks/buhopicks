@@ -1,0 +1,620 @@
+.page {
+  max-width: 1100px;
+  position: relative;
+}
+
+.sportBg {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  opacity: 0.25;
+  filter: saturate(120%) brightness(0.5) contrast(1.1);
+  pointer-events: none;
+  z-index: -2;
+}
+
+.timeSlotGroup {
+  margin-bottom: 1.5rem;
+}
+
+.timeSlotLabel {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--brand);
+  margin-bottom: 0.75rem;
+  padding-left: 4px;
+  border-left: 3px solid var(--brand);
+  padding-left: 12px;
+}
+
+/* ── Header ── */
+.pageHeader {
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.headerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.headerBottom {
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
+.brandGroup {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.sportNav {
+  display: flex;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.sportTab {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--text-muted);
+  transition: all 0.2s var(--ease);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sportTab:hover {
+  color: var(--text-primary);
+}
+
+.activeTennis {
+  background: var(--brand); /* ATP Blue/Yellow or custom */
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.activeFootball {
+  background: #22C55E;
+  color: white;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.activeBasketball {
+  background: #F97316;
+  color: white;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.activeBaseball {
+  background: #EF4444;
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.sportEmoji {
+  font-size: 1rem;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.syncBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.15);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  color: #86EFAC;
+  font-weight: 500;
+}
+
+.syncDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #22C55E;
+  box-shadow: 0 0 5px #22C55E;
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── Filters ── */
+.filterRow {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.tabsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filterLabel {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-left: 0.25rem;
+}
+
+
+/* ── Tabs ── */
+.tabsRow {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 1.25rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  width: fit-content;
+}
+
+.tab {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: var(--transition);
+  letter-spacing: 0.01em;
+}
+
+.tab:hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.05);
+}
+
+.tabActive {
+  background: var(--brand-dim);
+  color: var(--brand);
+}
+
+/* ── Stats Bar ── */
+.statsBar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 24px;
+  flex: 1;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.statLabel {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.statDivider {
+  width: 1px;
+  height: 40px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* ── Empty State ── */
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  margin-top: 2rem;
+}
+
+.emptyIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.emptyTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.emptyText {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  max-width: 400px;
+  margin: 0 auto 1.5rem;
+  line-height: 1.6;
+}
+
+/* ── Premium Section ── */
+.premiumSection {
+  margin-bottom: 2rem;
+}
+
+.premiumLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--premium);
+  margin-bottom: 0.75rem;
+}
+
+/* ── Matches Section ── */
+.matchesSection {
+  margin-top: 0.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  color: var(--text-secondary);
+}
+
+.tournamentGroup {
+  margin-bottom: 2rem;
+}
+
+.tournamentHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tournamentName {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.matchesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .pageTitle { font-size: 1.5rem; }
+  .statsBar { flex-wrap: wrap; }
+  .statItem { padding: 12px 16px; }
+  .matchesGrid { grid-template-columns: 1fr; }
+}
+
+/* ── Top 12 Picks ── */
+.top12Section {
+  margin-bottom: 2.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.05), rgba(0,0,0,0));
+  border: 1px solid rgba(251, 191, 36, 0.15);
+  border-radius: var(--radius);
+}
+
+.sectionHeader {
+  margin-bottom: 1.25rem;
+}
+
+.sectionIcon {
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+.sectionDesc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.top12Grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.miniPickCard {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: var(--transition);
+  position: relative;
+}
+/* ── Landing Page ── */
+.landingContainer {
+  min-height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.landingHeader {
+  margin-bottom: 4rem;
+  animation: slide-up 0.8s var(--ease) both;
+}
+
+.landingTitle {
+  font-size: 4rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  margin-bottom: 1rem;
+}
+
+.landingSubtitle {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  max-width: 500px;
+}
+
+.landingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 4rem;
+  max-width: 1100px;
+}
+
+.landingCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 3rem 2rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  animation: slide-up 1s var(--ease) both;
+}
+
+.cardTennis { animation-delay: 0.1s; }
+.cardFootball { animation-delay: 0.2s; }
+.cardBasketball { animation-delay: 0.3s; }
+.cardBaseball { animation-delay: 0.4s; }
+
+.landingCard:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: var(--brand);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
+}
+
+.cardTennis:hover { border-color: #3B82F6; }
+.cardFootball:hover { border-color: #22C55E; }
+.cardBasketball:hover { border-color: #F97316; }
+.cardBaseball:hover { border-color: #EF4444; }
+
+.cardEmoji {
+  font-size: 4rem;
+  filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3));
+  transition: transform 0.4s var(--ease);
+}
+
+.landingCard:hover .cardEmoji {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.cardTitle {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 0.5rem;
+}
+
+.cardDesc {
+  color: var(--text-muted);
+  font-size: 0.938rem;
+  margin-bottom: 1.5rem;
+}
+
+.cardAction {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--brand);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.landingFooter {
+  margin-top: 2rem;
+  animation: fade-in 2s var(--ease) both;
+}
+
+@media (max-width: 800px) {
+  .landingGrid {
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width: 400px;
+  }
+}
+
+.miniPickCard:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--premium);
+  transform: translateY(-2px);
+}
+
+.miniPickMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.miniTourn { color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
+.miniCircuit { color: var(--brand); }
+
+.miniMatchup {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 2px 0;
+}
+
+.miniPickInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.miniPickDesc { font-size: 0.75rem; color: var(--text-secondary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; flex: 1; }
+.miniOdds { font-weight: 700; color: var(--text-primary); font-family: monospace; }
+
+.miniEV {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.clickHint {
+  font-size: 0.65rem;
+  color: var(--brand);
+  text-align: center;
+  margin-top: 6px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.miniPickCard:hover .clickHint {
+  opacity: 1;
+}
+
+.cardPreview {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  margin-top: -0.5rem;
+}
+
+/* ── Quick View ── */
+.quickView {
+  width: 100%;
+  max-width: 900px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  animation: slide-up 1.2s var(--ease) both;
+}
+
+.quickTitle {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.quickGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+}
+
+.quickCol h4 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--brand);
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+.quickItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--border);
+}
+
+.quickMatch {
+  font-weight: 700;
+  font-size: 0.938rem;
+}
+
+.quickPick {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 700px) {
+  .quickGrid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}

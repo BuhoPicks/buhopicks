@@ -1,0 +1,129 @@
+.container {
+  margin-top: 2rem;
+  background: rgba(20, 25, 40, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badgeSuccess {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ADE80;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.badgeWarning {
+  background: rgba(251, 191, 36, 0.15);
+  color: #FBBF24;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.chartArea {
+  position: relative;
+  padding-bottom: 1rem;
+}
+
+.labels {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.dotWon {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #4ADE80;
+}
+
+.dotLost {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #EF4444;
+}
+
+.barContainer {
+  display: flex;
+  height: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05); /* fallback */
+}
+
+.barWon {
+  background: linear-gradient(90deg, #22C55E, #4ADE80);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  color: #000;
+  font-weight: 800;
+  font-size: 0.75rem;
+  transition: width 1s ease-in-out;
+}
+
+.barLost {
+  background: linear-gradient(90deg, #EF4444, #F87171);
+  transition: width 1s ease-in-out;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  position: relative;
+}
+
+.breakevenLine {
+  position: absolute;
+  left: 52.38%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #9CA3AF;
+}
+
+.lineMarker {
+  width: 2px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.4);
+  position: absolute;
+  bottom: 100%;
+  border-left: 1px dashed rgba(255, 255, 255, 0.6);
+}
