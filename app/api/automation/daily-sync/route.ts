@@ -12,6 +12,16 @@ export async function GET(req: NextRequest) {
       console.log('📡 Soccer sync triggered via API...');
       const result = await runDailyFootballSync();
       return NextResponse.json({ message: 'Football sync completed', result });
+    } else if (sport === 'nba') {
+      console.log('📡 NBA Basketball sync triggered via API...');
+      const { runDailyUSSportsSync } = await import('@/lib/usSportsEngine');
+      const result = await runDailyUSSportsSync('basketball', 'nba');
+      return NextResponse.json({ message: 'NBA sync completed', result });
+    } else if (sport === 'mlb') {
+      console.log('📡 MLB Baseball sync triggered via API...');
+      const { runDailyUSSportsSync } = await import('@/lib/usSportsEngine');
+      const result = await runDailyUSSportsSync('baseball', 'mlb');
+      return NextResponse.json({ message: 'MLB sync completed', result });
     } else {
       console.log('📡 Tennis sync triggered via API...');
       const result = await runDailyTennisSync();

@@ -65,6 +65,22 @@ export default function AdminPage() {
             >
               {loading ? <span className="spinner" /> : '⚽ Sincronizar Fútbol'}
             </button>
+            <button
+              onClick={() => runSync('nba')}
+              disabled={loading}
+              className={`btn btn-secondary ${styles.syncBtn}`}
+              style={{ background: 'var(--nba-orange, #ff7a00)', borderColor: 'var(--nba-orange, #ff7a00)', color: 'white' }}
+            >
+              {loading ? <span className="spinner" /> : '🏀 Sincronizar NBA'}
+            </button>
+            <button
+              onClick={() => runSync('mlb')}
+              disabled={loading}
+              className={`btn btn-secondary ${styles.syncBtn}`}
+              style={{ background: 'var(--mlb-red, #dc2626)', borderColor: 'var(--mlb-red, #dc2626)', color: 'white' }}
+            >
+              {loading ? <span className="spinner" /> : '⚾ Sincronizar MLB'}
+            </button>
           </div>
 
           {result && (
