@@ -663,6 +663,15 @@ export async function runDailyTennisSync(): Promise<{
         const p1 = buildPlayerProfile(p1Data, circuit, surface);
         const p2 = buildPlayerProfile(p2Data, circuit, surface);
 
+        // Filter out noise, TBDs, and Doubles
+        const isTBD = (n: string) => n.includes('TBD') || n.includes('TBC') || n.includes('TO BE') || n.includes('BYE') || n.includes('QUALIFIER');
+        const isDouble = (n: string) => n.includes('/') || n.includes('&') || n.includes(' / ');
+        
+        if (isTBD(p1.name) || isTBD(p2.name) || isDouble(p1.name) || isDouble(p2.name)) {
+          console.log(`⏩ Skipping TBD/Double match: ${p1.name} vs ${p2.name}`);
+          continue;
+        }
+
         if (p1.name === 'Unknown Player' || p2.name === 'Unknown Player') continue;
 
         // Run analysis
