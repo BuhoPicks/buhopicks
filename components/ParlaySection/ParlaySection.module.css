@@ -82,6 +82,17 @@
 .cardAggressive .typeLabel { color: #F472B6; }
 .cardUsa .typeLabel { color: #60A5FA; }
 
+.dayTag {
+  background: var(--brand);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
 .oddsTotal {
   font-size: 0.9rem;
   font-weight: 600;

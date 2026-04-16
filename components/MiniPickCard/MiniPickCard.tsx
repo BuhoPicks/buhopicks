@@ -54,7 +54,10 @@ export default function MiniPickCard({ pick, sport, animClass, localTime }: Mini
           {matchup.player1} vs {matchup.player2}
         </div>
         <div className={styles.miniPickInfo}>
-          <span className={styles.miniPickDesc}>{pick.description}</span>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {pick.market && <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{pick.market}</span>}
+            <span className={styles.miniPickDesc} style={{ textTransform: 'uppercase', letterSpacing: '0.02em' }}>{pick.description}</span>
+          </div>
           <span className={styles.miniOdds}>{pick.odds.toFixed(2)}</span>
         </div>
         <div className={styles.miniEV}>

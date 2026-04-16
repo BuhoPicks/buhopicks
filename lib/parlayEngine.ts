@@ -6,6 +6,7 @@ export interface Parlay {
   type: 'solid' | 'aggressive' | 'usa';
   picks: any[];
   totalOdds: number;
+  dayLabel?: string;
 }
 
 export function generateParlays(tennisMatches: any[], footballMatches: any[]): Parlay[] {

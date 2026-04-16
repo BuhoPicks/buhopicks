@@ -8,6 +8,11 @@ async function fetchAndProcessExp(url: string, sportName: string, icon: string):
   
   for (const ev of (data.events || [])) {
     if (!ev.competitions || ev.competitions.length === 0) continue;
+    
+    // Only include games that haven't started yet
+    const state = ev.status?.type?.state;
+    if (state !== 'pre') continue;
+
     const comp = ev.competitions[0];
     const c1 = comp.competitors[0];
     const c2 = comp.competitors[1];
@@ -83,6 +88,22 @@ async function fetchAndProcessExp(url: string, sportName: string, icon: string):
     });
   }
   return picks;
+}
+
+export async function getBasketballPicks(dateStr: string): Promise<any[]> {
+  try {
+    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${dateStr}`;
+    const ml = await fetchAndProcessExp(url, 'basketball', '🏀');
+    const props = await generateNBAPlayerProps(dateStr);
+    return [...ml, ...props].sort((a,b) => b.expectedValue - a.expectedValue);
+  } catch { return []; }
+}
+
+export async function getBaseballPicks(dateStr: string): Promise<any[]> {
+  try {
+    const url = `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=${dateStr}`;
+    return await fetchAndProcessExp(url, 'baseball', '⚾');
+  } catch { return []; }
 }
 
 export async function getBasketballParlay(dateStr: string): Promise<Parlay | null> {

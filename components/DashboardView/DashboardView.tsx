@@ -3,10 +3,9 @@ import Link from 'next/link';
 import TennisMatchCard from '@/components/TennisMatchCard/TennisMatchCard';
 import FootballMatchCard from '@/components/FootballMatchCard/FootballMatchCard';
 import ParlaySection from '@/components/ParlaySection/ParlaySection';
-import FootyStatsSection from '@/components/FootyStatsSection/FootyStatsSection';
 import ResultsChart from '@/components/ResultsChart/ResultsChart';
 import { generateParlays } from '@/lib/parlayEngine';
-import { getBasketballParlay, getBaseballParlay } from '@/lib/usSportsEngine';
+import { getBasketballParlay, getBaseballParlay, getBasketballPicks, getBaseballPicks } from '@/lib/usSportsEngine';
 import MiniPickCard from '@/components/MiniPickCard/MiniPickCard';
 import styles from '@/app/page.module.css';
 
@@ -104,12 +103,27 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
   const mxTomTimeStr = new Date(nowForStr.getTime() + mxOffsetDateStr + 86400000);
   const dateStr = day === 'today' ? mxTimeStr.toISOString().split('T')[0].replace(/-/g, '') : mxTomTimeStr.toISOString().split('T')[0].replace(/-/g, '');
   
+  const todayStr = mxTimeStr.toISOString().split('T')[0].replace(/-/g, '');
+  const tomorrowStr = mxTomTimeStr.toISOString().split('T')[0].replace(/-/g, '');
+
+  const usTodayPicks = sport === 'basketball' ? await getBasketballPicks(todayStr)
+                   : sport === 'baseball' ? await getBaseballPicks(todayStr)
+                   : [];
+  
+  const usTomPicks = sport === 'basketball' ? await getBasketballPicks(tomorrowStr)
+                   : sport === 'baseball' ? await getBaseballPicks(tomorrowStr)
+                   : [];
+
   if (sport === 'basketball') {
-    const nbaParlay = await getBasketballParlay(dateStr);
-    if (nbaParlay) parlays.push(nbaParlay);
+    const nbaToday = await getBasketballParlay(todayStr);
+    if (nbaToday) parlays.push({ ...nbaToday, dayLabel: 'HOY' });
+    const nbaTom = await getBasketballParlay(tomorrowStr);
+    if (nbaTom) parlays.push({ ...nbaTom, dayLabel: 'MAÑANA' });
   } else if (sport === 'baseball') {
-    const mlbParlay = await getBaseballParlay(dateStr);
-    if (mlbParlay) parlays.push(mlbParlay);
+    const mlbToday = await getBaseballParlay(todayStr);
+    if (mlbToday) parlays.push({ ...mlbToday, dayLabel: 'HOY' });
+    const mlbTom = await getBaseballParlay(tomorrowStr);
+    if (mlbTom) parlays.push({ ...mlbTom, dayLabel: 'MAÑANA' });
   }
 
   // Find premium pick (only for main sports)
@@ -208,8 +222,11 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
       <header className={styles.pageHeader}>
         <div className={styles.headerTop}>
           <div className={styles.brandGroup}>
-            <h1 className={styles.pageTitle}>
+            <h1 className={styles.pageTitle} style={{ fontSize: '2.8rem', lineHeight: 1 }}>
               <span className="text-gradient">Búho Picks</span>
+              <div style={{ fontSize: '0.8rem', letterSpacing: '0.3em', color: 'var(--premium)', marginTop: '4px', textAlign: 'center', fontWeight: 900 }}>
+                GRUPO VIP
+              </div>
             </h1>
             <div className={styles.sportNav}>
               <Link href={`/tennis?day=${day}&sort=${sortBy}`} className={`${styles.sportTab} ${sport === 'tennis' ? styles.activeTennis : ''}`}>
@@ -267,12 +284,8 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
       </div>
 
       {/* ── Parlay Section ── */}
-      {day === 'today' && <ParlaySection parlays={parlays} />}
+      {(parlays.length > 0) && <ParlaySection parlays={parlays} day={day} />}
 
-      {/* ── FootyStats Section ── */}
-      {sport === 'football' && matches.length > 0 && (
-        <FootyStatsSection matches={matches} />
-      )}
 
       {/* ── Stats Bar ── */}
       {matches.length > 0 && (
@@ -397,7 +410,49 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
         </section>
       )}
 
-      {/* ── All Matches ── */}
+      {/* ── US Individual Picks (Today) ── */}
+      {!isMainSport && usTodayPicks.length > 0 && (
+        <section className={styles.matchesSection} style={{ marginTop: '2rem' }}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>
+              <span className={styles.sectionIcon}>🔥</span> Picks para HOY — {sport === 'basketball' ? 'NBA' : 'MLB'}
+            </h2>
+          </div>
+          <div className={styles.top12Grid}>
+            {usTodayPicks.map((pick: any, i: number) => (
+              <MiniPickCard 
+                key={`today-${i}`} 
+                pick={pick} 
+                sport={sport} 
+                animClass={`animate-in delay-${Math.min(i, 8)}`}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── US Individual Picks (Tomorrow) ── */}
+      {!isMainSport && usTomPicks.length > 0 && (
+        <section className={styles.matchesSection} style={{ marginTop: '3rem' }}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>
+              <span className={styles.sectionIcon}>🔜</span> Picks para MAÑANA — {sport === 'basketball' ? 'NBA' : 'MLB'}
+            </h2>
+          </div>
+          <div className={styles.top12Grid}>
+            {usTomPicks.map((pick: any, i: number) => (
+              <MiniPickCard 
+                key={`tom-${i}`} 
+                pick={pick} 
+                sport={sport} 
+                animClass={`animate-in delay-${Math.min(i, 8)}`}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── All Matches (Main Sports) ── */}
       {isMainSport && matches.length > 0 && (
         <section className={styles.matchesSection}>
           <h2 className={styles.sectionTitle}>

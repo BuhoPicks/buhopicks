@@ -367,15 +367,26 @@
 }
 
 .miniPickCard {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 12px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5));
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius);
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  transition: var(--transition);
+  gap: 8px;
+  transition: all 0.3s var(--ease);
   position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.miniPickCard::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--brand), transparent);
+  opacity: 0.3;
 }
 /* ── Landing Page ── */
 .landingContainer {
@@ -492,9 +503,10 @@
 }
 
 .miniPickCard:hover {
-  background: rgba(255,255,255,0.06);
-  border-color: var(--premium);
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(0,0,0,0.7));
+  border-color: var(--brand);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5), 0 0 15px var(--brand-dim);
 }
 
 .miniPickMeta {
@@ -524,8 +536,21 @@
   gap: 8px;
 }
 
-.miniPickDesc { font-size: 0.75rem; color: var(--text-secondary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; flex: 1; }
-.miniOdds { font-weight: 700; color: var(--text-primary); font-family: monospace; }
+.miniPickDesc { 
+  font-size: 0.9rem; 
+  font-weight: 800;
+  color: var(--brand); 
+  text-overflow: ellipsis; 
+  overflow: hidden; 
+  white-space: nowrap; 
+  flex: 1; 
+}
+.miniOdds { 
+  font-weight: 900; 
+  color: var(--text-primary); 
+  font-family: 'JetBrains Mono', monospace; 
+  font-size: 1.1rem;
+}
 
 .miniEV {
   font-size: 0.7rem;

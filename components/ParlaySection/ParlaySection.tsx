@@ -4,25 +4,27 @@ import { Parlay } from '@/lib/parlayEngine';
 
 interface ParlaySectionProps {
   parlays: Parlay[];
+  day?: 'today' | 'tomorrow';
 }
 
-export default function ParlaySection({ parlays }: ParlaySectionProps) {
+export default function ParlaySection({ parlays, day = 'today' }: ParlaySectionProps) {
   if (!parlays || parlays.length === 0) return null;
 
   return (
     <section className={styles.container}>
       <div className={styles.header}>
         <h2 className={styles.title}>
-          <span className={styles.icon}>💎</span> Sugerencias de Parlay para Hoy
+          <span className={styles.icon}>💎</span> Sugerencias de Parlay para {day === 'today' ? 'Hoy' : 'Mañana'}
         </h2>
         <p className={styles.subtitle}>Combinaciones optimizadas por nuestro algoritmo estadístico.</p>
       </div>
 
       <div className={styles.grid}>
-        {parlays.map((parlay) => (
-          <div key={`${parlay.type}-${parlay.picks[0]?.sport || 'x'}`} className={`${styles.card} ${parlay.type === 'solid' ? styles.cardSolid : parlay.type === 'aggressive' ? styles.cardAggressive : styles.cardUsa}`}>
+        {parlays.map((parlay, pi) => (
+          <div key={`${parlay.type}-${pi}`} className={`${styles.card} ${parlay.type === 'solid' ? styles.cardSolid : parlay.type === 'aggressive' ? styles.cardAggressive : styles.cardUsa}`}>
             <div className={styles.cardHeader}>
               <div className={styles.typeLabel}>
+                {parlay.dayLabel && <span className={styles.dayTag}>{parlay.dayLabel}</span>}
                 {parlay.type === 'solid' ? '🛡️ PARLAY SÓLIDO' 
                   : parlay.type === 'aggressive' ? '🚀 PARLAY AGRESIVO' 
                   : parlay.picks[0]?.sport === 'basketball' ? '🏀 PARLAY NBA' 

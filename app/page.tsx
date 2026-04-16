@@ -26,10 +26,13 @@ export default async function LandingPage() {
   return (
     <div className={styles.landingContainer}>
       <header className={styles.landingHeader}>
-        <h1 className={styles.landingTitle}>
+        <h1 className={styles.landingTitle} style={{ fontSize: '4.5rem', lineHeight: 0.9 }}>
           <span className="text-gradient">Búho Picks</span>
+          <div style={{ fontSize: '1rem', letterSpacing: '0.4em', color: 'var(--premium)', marginTop: '0.5rem', fontWeight: 900 }}>
+             GRUPO VIP
+          </div>
         </h1>
-        <p className={styles.landingSubtitle}>Análisis deportivo automático 24/7</p>
+        <p className={styles.landingSubtitle} style={{ marginTop: '1.5rem' }}>Análisis deportivo con Inteligencia Artificial</p>
       </header>
 
       <div className={styles.landingGrid}>
@@ -61,9 +64,9 @@ export default async function LandingPage() {
           <div className={styles.cardEmoji}>🏀</div>
           <div className={styles.cardContent}>
             <h2 className={styles.cardTitle}>Panel NBA</h2>
-            <p className={styles.cardDesc}>Parlay Diario</p>
+            <p className={styles.cardDesc}>Picks Individuales y Parlay</p>
             <div className={styles.cardPreview}>
-              1 parlay optimizado por día
+              Análisis completo hoy y mañana
             </div>
             <span className={styles.cardAction}>Entrar →</span>
           </div>
@@ -73,9 +76,9 @@ export default async function LandingPage() {
           <div className={styles.cardEmoji}>⚾</div>
           <div className={styles.cardContent}>
             <h2 className={styles.cardTitle}>Panel MLB</h2>
-            <p className={styles.cardDesc}>Parlay Diario</p>
+            <p className={styles.cardDesc}>Picks Individuales y Parlay</p>
             <div className={styles.cardPreview}>
-              1 parlay optimizado por día
+              Análisis completo hoy y mañana
             </div>
             <span className={styles.cardAction}>Entrar →</span>
           </div>

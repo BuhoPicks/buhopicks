@@ -28,7 +28,7 @@ export default function Navigation() {
           </div>
           <div>
             <span className={`text-gradient ${styles.logoName}`}>Búho Picks</span>
-            <span className={styles.logoSub}>Sports Picks AI</span>
+            <span className={styles.logoSub} style={{ letterSpacing: '0.2em', color: 'var(--premium)', fontWeight: 800 }}>GRUPO VIP</span>
           </div>
         </div>
 
