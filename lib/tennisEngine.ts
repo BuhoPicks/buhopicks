@@ -710,14 +710,17 @@ export async function runDailyTennisSync(): Promise<{
 
         // Generate and filter picks
         const rawPicks   = generatePicks(p1, p2, analysis, surface, circuit);
-        const goodPicks  = filterAndRankPicks(rawPicks, -0.08); // Include more picks with reasonable stats
+        const goodPicks  = filterAndRankPicks(rawPicks, -0.12); // Be more inclusive when volume is low
 
-        // FILTER: Keep only ATP/WTA/Challenger (No ITF usually on Stake) and no doubles ("/")
-        if (tournamentLevel !== 'ITF' && !p1.name.includes('/')) {
+        // FILTER: Keep only ATP/WTA/Challenger and high-level ITF if needed. No doubles.
+        const isDoubleMatch = p1.name.includes('/') || p2.name.includes('/') || tournament.toLowerCase().includes('doubles');
+        
+        if (!isDoubleMatch) {
           for (const pick of goodPicks) {
             pickBuffer.push({ pick, matchId: dbMatch.id });
           }
         }
+
       } catch (err) {
         console.error('Error processing event:', err);
         continue;
@@ -758,23 +761,25 @@ export async function runDailyTennisSync(): Promise<{
     else slotBuckets['noche'].push(entry);
   }
 
-  // Sort each bucket by EV and take top 8 per slot
+  // Sort each bucket by EV and take top 15 per slot
   const selectedPicks: typeof pickBuffer = [];
   for (const [slot, entries] of Object.entries(slotBuckets)) {
     entries.sort((a, b) => b.pick.expectedValue - a.pick.expectedValue);
-    selectedPicks.push(...entries.slice(0, 8));
+    selectedPicks.push(...entries.slice(0, 15));
   }
 
-  // If we still have room (< 50), fill with remaining best picks
-  if (selectedPicks.length < 50) {
+
+  // If we still have room (< 80), fill with remaining best picks
+  if (selectedPicks.length < 80) {
     const selectedIds = new Set(selectedPicks.map(p => `${p.matchId}-${p.pick.market}-${p.pick.selection}`));
     const remaining = pickBuffer
       .filter(p => !selectedIds.has(`${p.matchId}-${p.pick.market}-${p.pick.selection}`))
       .sort((a, b) => b.pick.expectedValue - a.pick.expectedValue);
-    selectedPicks.push(...remaining.slice(0, 50 - selectedPicks.length));
+    selectedPicks.push(...remaining.slice(0, 80 - selectedPicks.length));
   }
 
-  const top30Picks = selectedPicks.slice(0, 50); // Allow more picks for coverage
+  const top30Picks = selectedPicks.slice(0, 80); 
+
 
   let bestPickId: string | null = null;
   let bestPickEV = -Infinity;
@@ -865,10 +870,12 @@ function detectTournamentLevel(name: string): string {
   if (/australian.open|roland.garros|wimbledon|us.open|french.open/i.test(n)) return 'GS';
   if (/masters|1000|atp.finals|wta.finals|indian.wells|miami|madrid|rome|montreal|toronto|cincinnati|shanghai|paris|madrid/i.test(n)) return 'Masters';
   if (/500|barcelona|dubai|acapulco|rotterdam|wu.han|tokyo|beijing/i.test(n)) return '500';
-  if (/challenger/i.test(n)) return 'Challenger';
-  if (/itf/i.test(n)) return 'ITF';
+  // If city name is known Challenger host or has Challenger in name
+  if (/challenger|busan|oeiras|tallahassee|santa.cruz|mexico.city|cuernavaca|san.luis.potosi|aguascalientes/i.test(n)) return 'Challenger';
+  if (/itf|wuning|monastir|antalya|sharm.el.sheikh/i.test(n)) return 'ITF';
   return '250';
 }
+
 
 /**
  * Generates a rich, AI-style narrative explanation for a tennis pick
