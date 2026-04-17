@@ -9,7 +9,11 @@ interface FootballMatchCardProps {
 }
 
 export default function FootballMatchCard({ match, picks, className = '', featured = false }: FootballMatchCardProps) {
-  const dateStr = new Date(match.date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const dateStr = new Date(match.date).toLocaleTimeString('es-ES', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    timeZone: 'America/Mexico_City'
+  });
 
   return (
     <div className={`${styles.card} ${featured ? styles.featured : ''} ${className}`}>

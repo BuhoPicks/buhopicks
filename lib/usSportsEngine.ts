@@ -9,9 +9,10 @@ async function fetchAndProcessExp(url: string, sportName: string, icon: string):
   for (const ev of (data.events || [])) {
     if (!ev.competitions || ev.competitions.length === 0) continue;
     
-    // Only include games that haven't started yet
-    const state = ev.status?.type?.state;
-    if (state !== 'pre') continue;
+    // Allow games in any state, but tag them correctly
+    const state = ev.status?.type?.state; 
+    // If it's for Tomorrow and it's already finished (unlikely), skip
+    if (url.includes('dates=') && !url.includes(new Date().toISOString().split('T')[0].replace(/-/g,'')) && state === 'post') continue;
 
     const comp = ev.competitions[0];
     const c1 = comp.competitors[0];

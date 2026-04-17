@@ -129,18 +129,25 @@ export default function AdminPage() {
 
           <div className={styles.scheduleCard}>
             <div className={styles.scheduleRow}>
-              <span className={styles.scheduleIcon}>🌅</span>
+              <span className={styles.scheduleIcon}>🕛</span>
               <div>
-                <div className={styles.scheduleTime}>07:00 AM</div>
-                <div className={styles.scheduleName}>Sync matutino — picks del día</div>
+                <div className={styles.scheduleTime}>00:01 AM</div>
+                <div className={styles.scheduleName}>Corte de medianoche — Picks principales</div>
               </div>
-              <span className="badge badge-high" style={{ marginLeft: 'auto' }}>Recomendado</span>
+              <span className="badge badge-high" style={{ marginLeft: 'auto' }}>Crítico</span>
             </div>
             <div className={styles.scheduleRow}>
-              <span className={styles.scheduleIcon}>🌆</span>
+              <span className={styles.scheduleIcon}>🕗</span>
               <div>
-                <div className={styles.scheduleTime}>02:00 PM</div>
-                <div className={styles.scheduleName}>Sync vespertino — actualización</div>
+                <div className={styles.scheduleTime}>08:01 AM</div>
+                <div className={styles.scheduleName}>Actualización matutina</div>
+              </div>
+            </div>
+            <div className={styles.scheduleRow}>
+              <span className={styles.scheduleIcon}>🕓</span>
+              <div>
+                <div className={styles.scheduleTime}>04:01 PM</div>
+                <div className={styles.scheduleName}>Actualización vespertina</div>
               </div>
             </div>
           </div>

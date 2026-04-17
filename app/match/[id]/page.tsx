@@ -83,6 +83,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
               {new Date(match.date).toLocaleString('es-ES', {
                 weekday: 'short', day: '2-digit', month: 'short',
                 hour: '2-digit', minute: '2-digit',
+                timeZone: 'America/Mexico_City'
               })}
             </div>
           </div>

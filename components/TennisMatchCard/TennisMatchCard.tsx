@@ -66,7 +66,11 @@ const LEVEL_LABELS: Record<string, string> = {
 };
 
 function formatTime(date: Date): string {
-  return new Date(date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  return new Date(date).toLocaleTimeString('es-ES', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    timeZone: 'America/Mexico_City'
+  });
 }
 
 export default function TennisMatchCard({ match, picks, featured, className }: TennisMatchCardProps) {
@@ -111,7 +115,7 @@ export default function TennisMatchCard({ match, picks, featured, className }: T
             {SURFACE_EMOJIS[match.surface]} {match.surface}
           </span>
           <div className={styles.timeInfo}>
-            <span className={styles.date}>{new Date(match.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}</span>
+            <span className={styles.date}>{new Date(match.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', timeZone: 'America/Mexico_City' })}</span>
             <span className={styles.time}>{formatTime(match.date)}</span>
           </div>
         </div>

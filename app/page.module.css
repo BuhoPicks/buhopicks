@@ -205,12 +205,30 @@
   display: flex;
   align-items: center;
   gap: 0;
-  background: rgba(255,255,255,0.03);
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  backdrop-filter: blur(10px);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin-bottom: 1.5rem;
+  border-radius: var(--radius-lg);
+  margin-bottom: 2rem;
   overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  position: relative;
 }
+
+.statsBar::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--brand);
+  opacity: 0.5;
+}
+
+.statsBarTennis::after { background: var(--atp); }
+.statsBarFootball::after { background: #22C55E; }
+.statsBarBasketball::after { background: #F97316; }
+.statsBarBaseball::after { background: #EF4444; }
+
 
 .statItem {
   display: flex;
@@ -367,18 +385,20 @@
 }
 
 .miniPickCard {
-  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5));
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(0,0,0,0.4));
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: var(--radius);
-  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  transition: all 0.3s var(--ease);
+  gap: 12px;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
 }
+
 
 .miniPickCard::before {
   content: '';

@@ -14,7 +14,9 @@ export async function runDailyFootballSync() {
     let allEvents: any[] = [];
     const leagues = [
       'eng.1', 'esp.1', 'ita.1', 'ger.1', 'fra.1', 'uefa.champions', 'mex.1',
-      'ned.1', 'por.1', 'usa.1', 'bra.1', 'arg.1', 'uefa.europa', 'eng.2', 'esp.2'
+      'ned.1', 'por.1', 'usa.1', 'bra.1', 'arg.1', 'uefa.europa', 'eng.2', 'esp.2',
+      'ger.2', 'fra.2', 'ita.2', 'mex.2', 'uefa.europa.conf', 'eng.fa', 'esp.copa_del_rey',
+      'ger.dfb_pokal', 'ita.coppa_italia', 'fra.coupe_de_france', 'col.1', 'chi.1', 'ecu.1', 'per.1'
     ];
 
     for (let i = 0; i < daysToFetch; i++) {
@@ -111,6 +113,8 @@ export async function runDailyFootballSync() {
         // 🦉 NEW ANALYSIS ENGINE: Heuristics based on ESPN data
         const homeRank = parseInt(home.rank) || 99;
         const awayRank = parseInt(away.rank) || 99;
+        const homeStrength = (100 - homeRank) / 100;
+        const awayStrength = (100 - awayRank) / 100;
         const isMajorLeague = leagues.includes(event.league?.slug || '');
         
         // Base probabilities

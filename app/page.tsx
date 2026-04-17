@@ -25,6 +25,7 @@ export default async function LandingPage() {
 
   return (
     <div className={styles.landingContainer}>
+      <div className={styles.sportBg} style={{ backgroundImage: "url('/hero-bg.png')" }} />
       <header className={styles.landingHeader}>
         <h1 className={styles.landingTitle} style={{ fontSize: '4.5rem', lineHeight: 0.9 }}>
           <span className="text-gradient">Búho Picks</span>

@@ -13,13 +13,23 @@ type DayFilter = 'today' | 'tomorrow';
 type SportFilter = 'tennis' | 'football' | 'basketball' | 'baseball';
 type SortFilter = 'relevance' | 'time';
 
-async function getTennisMatches(day: DayFilter, sortBy: SortFilter) {
+function getMEXDateWindow(day: DayFilter) {
   const mxOffset = -6 * 60 * 60 * 1000;
   const now = new Date();
-  const mxTime = new Date(now.getTime() + mxOffset);
-  const baseUTC = new Date(Date.UTC(mxTime.getUTCFullYear(), mxTime.getUTCMonth(), mxTime.getUTCDate()));
-  const start = new Date(baseUTC.getTime() - mxOffset + (day === 'tomorrow' ? 86400000 : 0));
+  
+  // Calculate the start of the current day in Mexico
+  const mxNow = new Date(now.getTime() + mxOffset);
+  const mxTodayStart = new Date(Date.UTC(mxNow.getUTCFullYear(), mxNow.getUTCMonth(), mxNow.getUTCDate()));
+  
+  // Shift back to UTC for Prisma comparison
+  const start = new Date(mxTodayStart.getTime() - mxOffset + (day === 'tomorrow' ? 86400000 : 0));
   const end = new Date(start.getTime() + 86400000);
+  
+  return { start, end };
+}
+
+async function getTennisMatches(day: DayFilter, sortBy: SortFilter) {
+  const { start, end } = getMEXDateWindow(day);
 
   const matches = await prisma.tennisMatch.findMany({
     where: { date: { gte: start, lt: end } },
@@ -28,24 +38,17 @@ async function getTennisMatches(day: DayFilter, sortBy: SortFilter) {
   });
 
   if (sortBy === 'relevance') {
-    // Sort by max pick EV in each match
     return matches.sort((a, b) => {
       const maxA = Math.max(...a.picks.map(p => p.expectedValue), -1);
       const maxB = Math.max(...b.picks.map(p => p.expectedValue), -1);
       return maxB - maxA;
     });
   }
-
   return matches;
 }
 
 async function getFootballMatches(day: DayFilter, sortBy: SortFilter) {
-  const mxOffset = -6 * 60 * 60 * 1000;
-  const now = new Date();
-  const mxTime = new Date(now.getTime() + mxOffset);
-  const baseUTC = new Date(Date.UTC(mxTime.getUTCFullYear(), mxTime.getUTCMonth(), mxTime.getUTCDate()));
-  const start = new Date(baseUTC.getTime() - mxOffset + (day === 'tomorrow' ? 86400000 : 0));
-  const end = new Date(start.getTime() + 86400000);
+  const { start, end } = getMEXDateWindow(day);
 
   const matches = await prisma.footballMatch.findMany({
     where: { date: { gte: start, lt: end } },
@@ -60,7 +63,6 @@ async function getFootballMatches(day: DayFilter, sortBy: SortFilter) {
       return maxB - maxA;
     });
   }
-
   return matches;
 }
 
@@ -78,33 +80,23 @@ interface DashboardViewProps {
 }
 
 export default async function DashboardView({ sport, day, sortBy = 'relevance' }: DashboardViewProps) {
+  // Use the same window logic for all calculations in this render
+  const { start, end } = getMEXDateWindow(day);
+  
   // Only fetch full DB metadata for tennis/football
   const isMainSport = sport === 'tennis' || sport === 'football';
   const matches = sport === 'tennis' ? await getTennisMatches(day, sortBy) 
                 : sport === 'football' ? await getFootballMatches(day, sortBy) : [];
     
   const lastSync = isMainSport ? await getLastSyncLog(sport) : null;
-
-  // Generate parlays — sport-specific ONLY
-  const parlays = [];
   
-  if (sport === 'tennis') {
-    const tennisOnly = generateParlays(matches, []);
-    // Filter to only tennis picks
-    parlays.push(...tennisOnly.filter(p => p.picks.every((pk: any) => pk.sport === 'tennis' || !pk.sport)));
-  } else if (sport === 'football') {
-    const footballOnly = generateParlays([], matches);
-    parlays.push(...footballOnly.filter(p => p.picks.every((pk: any) => pk.sport === 'football' || !pk.sport)));
-  }
+  // Mexican date strings for US API calls
+  const mxOffset = -6 * 60 * 60 * 1000;
+  const mxTime = new Date(new Date().getTime() + mxOffset);
+  const mxTomTime = new Date(mxTime.getTime() + 86400000);
   
-  const mxOffsetDateStr = -6 * 60 * 60 * 1000;
-  const nowForStr = new Date();
-  const mxTimeStr = new Date(nowForStr.getTime() + mxOffsetDateStr);
-  const mxTomTimeStr = new Date(nowForStr.getTime() + mxOffsetDateStr + 86400000);
-  const dateStr = day === 'today' ? mxTimeStr.toISOString().split('T')[0].replace(/-/g, '') : mxTomTimeStr.toISOString().split('T')[0].replace(/-/g, '');
-  
-  const todayStr = mxTimeStr.toISOString().split('T')[0].replace(/-/g, '');
-  const tomorrowStr = mxTomTimeStr.toISOString().split('T')[0].replace(/-/g, '');
+  const todayStr = mxTime.toISOString().split('T')[0].replace(/-/g, '');
+  const tomorrowStr = mxTomTime.toISOString().split('T')[0].replace(/-/g, '');
 
   const usTodayPicks = sport === 'basketball' ? await getBasketballPicks(todayStr)
                    : sport === 'baseball' ? await getBaseballPicks(todayStr)
@@ -114,157 +106,117 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
                    : sport === 'baseball' ? await getBaseballPicks(tomorrowStr)
                    : [];
 
-  if (sport === 'basketball') {
-    const nbaToday = await getBasketballParlay(todayStr);
-    if (nbaToday) parlays.push({ ...nbaToday, dayLabel: 'HOY' });
-    const nbaTom = await getBasketballParlay(tomorrowStr);
-    if (nbaTom) parlays.push({ ...nbaTom, dayLabel: 'MAÑANA' });
-  } else if (sport === 'baseball') {
-    const mlbToday = await getBaseballParlay(todayStr);
-    if (mlbToday) parlays.push({ ...mlbToday, dayLabel: 'HOY' });
-    const mlbTom = await getBaseballParlay(tomorrowStr);
-    if (mlbTom) parlays.push({ ...mlbTom, dayLabel: 'MAÑANA' });
+  const parlays = [];
+  if (sport === 'tennis') {
+    parlays.push(...generateParlays(matches, []).filter(p => !p.picks.some((pk:any) => pk.sport === 'football')));
+  } else if (sport === 'football') {
+    parlays.push(...generateParlays([], matches).filter(p => !p.picks.some((pk:any) => pk.sport === 'tennis')));
   }
 
-  // Find premium pick (only for main sports)
+  // Filter US Parlays by day
+  if (sport === 'basketball') {
+    if (day === 'today') {
+      const nbaToday = await getBasketballParlay(todayStr);
+      if (nbaToday) parlays.push({ ...nbaToday, dayLabel: 'HOY' });
+    } else {
+      const nbaTom = await getBasketballParlay(tomorrowStr);
+      if (nbaTom) parlays.push({ ...nbaTom, dayLabel: 'MAÑANA' });
+    }
+  } else if (sport === 'baseball') {
+    if (day === 'today') {
+      const mlbToday = await getBaseballParlay(todayStr);
+      if (mlbToday) parlays.push({ ...mlbToday, dayLabel: 'HOY' });
+    } else {
+      const mlbTom = await getBaseballParlay(tomorrowStr);
+      if (mlbTom) parlays.push({ ...mlbTom, dayLabel: 'MAÑANA' });
+    }
+  }
+
   const premiumPick = isMainSport ? (matches as any[])
     .flatMap(m => m.picks.filter((p: any) => p.isPremiumPick))
     .sort((a, b) => b.expectedValue - a.expectedValue)[0] ?? null : null;
 
-  const premiumMatch = premiumPick
-    ? (matches as any[]).find(m => m.id === premiumPick.matchId)
-    : null;
+  const premiumMatch = premiumPick ? matches.find(m => m.id === premiumPick.matchId) : null;
 
-  // Stats
-  const totalPicks = matches.reduce((s, m) => s + m.picks.length, 0);
-  const highValuePicks = matches.reduce(
-    (s, m) => s + m.picks.filter(p => p.valueLabel === 'HIGH' || p.valueLabel === 'PREMIUM').length,
-    0
-  );
-  const avgEV = totalPicks > 0
-    ? matches.flatMap(m => m.picks).reduce((s, p) => s + p.expectedValue, 0) / totalPicks
-    : 0;
-
-  // Effectiveness tracking (settled picks)
-  const settledPicks = matches.flatMap(m => m.picks).filter((p: any) => p.status === 'WON' || p.status === 'LOST');
-  const wonPicks = settledPicks.filter((p: any) => p.status === 'WON').length;
-  const winRate = settledPicks.length > 0 ? (wonPicks / settledPicks.length) * 100 : 0;
-
-  const syncTimeStr = lastSync
-    ? new Date(lastSync.syncedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
-    : null;
-
-  // Group matches (only if NOT sorting by relevance, as grouping breaks relevance order)
-  // Actually, user wants to SEE the picks. If sorted by relevance, maybe we don't group by tournament?
-  // Let's keep grouping but sort groups by relevance, or just show a flat list if relevance is selected?
-  // The user wants "observar los picks por relevancia", usually that's a flat list of all matches.
+  const usTotalPicksCount = usTodayPicks.length + usTomPicks.length;
+  const totalPicksCalculated = isMainSport ? matches.reduce((s, m) => s + m.picks.length, 0) : usTotalPicksCount;
   
-  const groups: Record<string, typeof matches> = {};
-  if (sortBy === 'time') {
-    for (const match of (matches as any[])) {
-      const key = sport === 'tennis' ? match.tournament : match.league;
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(match);
+  const highValuePicks = isMainSport 
+    ? matches.reduce((s, m) => s + m.picks.filter(p => p.valueLabel === 'HIGH' || p.valueLabel === 'PREMIUM').length, 0)
+    : usTotalPicksCount;
+
+  const avgEV = isMainSport && totalPicksCalculated > 0
+    ? matches.flatMap(m => m.picks).reduce((s, p) => s + p.expectedValue, 0) / totalPicksCalculated
+    : 0.05;
+
+  const syncTimeStr = lastSync ? new Date(lastSync.syncedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : null;
+
+  const groupedMatches = sortBy === 'time' ? matches.reduce((acc: any, m: any) => {
+    const tournament = m.tournament || 'Otros';
+    if (!acc[tournament]) acc[tournament] = [];
+    acc[tournament].push(m);
+    return acc;
+  }, {}) : null;
+
+  const picksBySlot = isMainSport ? [
+    { label: 'Madrugada (00:00 - 06:00)', picks: [] as any[] },
+    { label: 'Mañana (06:00 - 12:00)', picks: [] as any[] },
+    { label: 'Tarde (12:00 - 18:00)', picks: [] as any[] },
+    { label: 'Noche (18:00 - 00:00)', picks: [] as any[] }
+  ] : [];
+
+  if (isMainSport) {
+    for (const match of matches) {
+      const matchHour = (new Date(match.date).getUTCHours() - 6 + 24) % 24;
+      let slotIdx = 0;
+      if (matchHour >= 6 && matchHour < 12) slotIdx = 1;
+      else if (matchHour >= 12 && matchHour < 18) slotIdx = 2;
+      else if (matchHour >= 18) slotIdx = 3;
+      
+      const bestMatchPick = match.picks[0];
+      if (bestMatchPick) {
+        picksBySlot[slotIdx].picks.push({ ...bestMatchPick, parentMatch: match });
+      }
     }
+    picksBySlot.forEach(s => s.picks.sort((a,b) => b.expectedValue - a.expectedValue));
   }
 
-  // Time-slot grouping for relevance view
-  const timeSlots = [
-    { label: '🌙 Madrugada (00:01 - 06:00)', from: 0, to: 6 },
-    { label: '☀️ Mañana (06:01 - 12:00)', from: 6, to: 12 },
-    { label: '🌤️ Tarde (12:01 - 18:00)', from: 12, to: 18 },
-    { label: '🌙 Noche (18:01 - 00:00)', from: 18, to: 24 },
-  ];
-
-  // Helper: get local hour in Mexico City timezone
-  const getLocalHour = (date: Date) => {
-    const localStr = date.toLocaleString('en-US', { timeZone: 'America/Mexico_City', hour: 'numeric', hour12: false });
-    return parseInt(localStr) || 0;
-  };
-
-  const getLocalTime = (date: Date) => {
-    return date.toLocaleTimeString('es-MX', { timeZone: 'America/Mexico_City', hour: '2-digit', minute: '2-digit', hour12: false });
-  };
-
-  const picksBySlot = isMainSport && sortBy === 'relevance' ? timeSlots.map(slot => {
-    const slotMatches = (matches as any[]).filter(m => {
-      const hour = getLocalHour(new Date(m.date));
-      return hour >= slot.from && hour < slot.to;
-    });
-    const allPicks = slotMatches.flatMap(m => m.picks.map((p: any) => ({ ...p, parentMatch: m })));
-    const uniqueMatchPicks: any[] = [];
-    const seenMatches = new Set();
-    const sortedPicks = [...allPicks].sort((a, b) => b.expectedValue - a.expectedValue);
-    for (const pick of sortedPicks) {
-      if (!seenMatches.has(pick.parentMatch.id)) {
-        uniqueMatchPicks.push(pick);
-        seenMatches.add(pick.parentMatch.id);
-      }
-      if (uniqueMatchPicks.length >= 8) break;
-    }
-    return { ...slot, picks: uniqueMatchPicks };
-  }) : [];
-
-  // Sport-specific background
-  const bgMap: Record<string, string> = {
-    tennis: '/bg_tennis.png',
-    football: '/bg_football.png',
-    basketball: '/bg_basketball.png',
-    baseball: '/bg_baseball.png',
-  };
-  const sportBg = bgMap[sport] || '/sports_background_v2.png';
+  const getLocalTime = (date: Date) => date.toLocaleTimeString('es-ES', { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    hour12: false,
+    timeZone: 'America/Mexico_City'
+  });
+  const sportBg = sport === 'tennis' ? '/bg_tennis.png' : sport === 'football' ? '/bg_football.png' : sport === 'basketball' ? '/bg_basketball.png' : sport === 'baseball' ? '/bg_baseball.png' : '/sports_background_v2.png';
 
   return (
     <div className={styles.page}>
-      {/* Sport-specific background */}
       <div className={styles.sportBg} style={{ backgroundImage: `url('${sportBg}')` }} />
-      {/* ── Page Header ── */}
       <header className={styles.pageHeader}>
         <div className={styles.headerTop}>
           <div className={styles.brandGroup}>
             <h1 className={styles.pageTitle} style={{ fontSize: '2.8rem', lineHeight: 1 }}>
               <span className="text-gradient">Búho Picks</span>
-              <div style={{ fontSize: '0.8rem', letterSpacing: '0.3em', color: 'var(--premium)', marginTop: '4px', textAlign: 'center', fontWeight: 900 }}>
-                GRUPO VIP
-              </div>
+              <div style={{ fontSize: '0.8rem', letterSpacing: '0.3em', color: 'var(--premium)', marginTop: '4px', textAlign: 'center', fontWeight: 900 }}>GRUPO VIP</div>
             </h1>
             <div className={styles.sportNav}>
-              <Link href={`/tennis?day=${day}&sort=${sortBy}`} className={`${styles.sportTab} ${sport === 'tennis' ? styles.activeTennis : ''}`}>
-                <span className={styles.sportEmoji}>🎾</span> Tenis
-              </Link>
-              <Link href={`/football?day=${day}&sort=${sortBy}`} className={`${styles.sportTab} ${sport === 'football' ? styles.activeFootball : ''}`}>
-                <span className={styles.sportEmoji}>⚽</span> Fútbol
-              </Link>
-              <Link href={`/basketball?day=${day}&sort=${sortBy}`} className={`${styles.sportTab} ${sport === 'basketball' ? styles.activeBasketball : ''}`}>
-                <span className={styles.sportEmoji}>🏀</span> NBA
-              </Link>
-              <Link href={`/baseball?day=${day}&sort=${sortBy}`} className={`${styles.sportTab} ${sport === 'baseball' ? styles.activeBaseball : ''}`}>
-                <span className={styles.sportEmoji}>⚾</span> MLB
-              </Link>
+              {['tennis', 'football', 'basketball', 'baseball'].map(s => (
+                <Link key={s} href={`/${s}?day=${day}&sort=${sortBy}`} className={`${styles.sportTab} ${sport === s ? styles[`active${s.charAt(0).toUpperCase() + s.slice(1)}`] : ''}`}>
+                  <span className={styles.sportEmoji}>{s==='tennis'?'🎾':s==='football'?'⚽':s==='basketball'?'🏀':'⚾'}</span> {s==='tennis'?'Tenis':s==='football'?'Fútbol':s==='basketball'?'NBA':'MLB'}
+                </Link>
+              ))}
             </div>
           </div>
-          
           <div className={styles.headerRight}>
-            {syncTimeStr && (
-              <div className={styles.syncBadge}>
-                <span className={styles.syncDot} />
-                Sync: {syncTimeStr}
-              </div>
-            )}
-            <Link href="/admin" className="btn btn-ghost" style={{ fontSize: '0.8rem' }}>
-              ⚙️ Admin
-            </Link>
+            {syncTimeStr && <div className={styles.syncBadge}><span className={styles.syncDot} /> Sync: {syncTimeStr}</div>}
+            <Link href="/admin" className="btn btn-ghost" style={{ fontSize: '0.8rem' }}>⚙️ Admin</Link>
           </div>
         </div>
-
         <div className={styles.headerBottom}>
-          <p className={styles.pageSubtitle}>
-            {day === 'today' ? 'Análisis estadístico en tiempo real' : 'Picks anticipados para mañana'} — {sport === 'tennis' ? 'ATP & WTA' : 'Ligas Principales'}
-          </p>
+          <p className={styles.pageSubtitle}>{day === 'today' ? 'Análisis estadístico en tiempo real' : 'Picks anticipados para mañana'} — {sport === 'tennis' ? 'ATP & WTA' : 'Ligas Principales'}</p>
         </div>
       </header>
 
-      {/* ── Filters Row (Day & Sort) ── */}
       <div className={styles.filterRow}>
         <div className={styles.tabsCol}>
           <div className={styles.filterLabel}>FECHA</div>
@@ -273,7 +225,6 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
             <Link href={`/${sport}?day=tomorrow&sort=${sortBy}`} className={`${styles.tab} ${day === 'tomorrow' ? styles.tabActive : ''}`}>Mañana</Link>
           </div>
         </div>
-
         <div className={styles.tabsCol}>
           <div className={styles.filterLabel}>ORDENAR POR</div>
           <div className={styles.tabsRow}>
@@ -283,252 +234,72 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
         </div>
       </div>
 
-      {/* ── Parlay Section ── */}
-      {(parlays.length > 0) && <ParlaySection parlays={parlays} day={day} />}
+      {parlays.length > 0 && <ParlaySection parlays={parlays} day={day} />}
+      
+      {(isMainSport ? matches.length > 0 : (day === 'today' ? usTodayPicks.length > 0 : usTomPicks.length > 0)) && (
+        <div className={`${styles.statsBar} ${styles['statsBar' + sport.charAt(0).toUpperCase() + sport.slice(1)]} animate-in`}>
 
-
-      {/* ── Stats Bar ── */}
-      {matches.length > 0 && (
-        <div className={`${styles.statsBar} animate-in`}>
-          <div className={styles.statItem}>
-            <span className={styles.statValue}>{matches.length}</span>
-            <span className={styles.statLabel}>Partidos</span>
-          </div>
-          <div className={styles.statDivider} />
-          <div className={styles.statItem}>
-            <span className={styles.statValue}>{totalPicks}</span>
-            <span className={styles.statLabel}>Picks</span>
-          </div>
-          <div className={styles.statDivider} />
-          <div className={styles.statItem}>
-            <span className={styles.statValue} style={{ color: 'var(--high)' }}>{highValuePicks}</span>
-            <span className={styles.statLabel}>Alto Valor</span>
-          </div>
-          <div className={styles.statDivider} />
-          <div className={styles.statItem}>
-            <span className={styles.statValue} style={{ color: 'var(--premium)' }}>
-              +{(avgEV * 100).toFixed(1)}%
-            </span>
-            <span className={styles.statLabel}>EV Medio</span>
-          </div>
-          {settledPicks.length > 0 && (
-            <>
-              <div className={styles.statDivider} />
-              <div className={styles.statItem}>
-                <span className={styles.statValue} style={{ color: winRate >= 52.4 ? '#4ADE80' : 'white' }}>
-                  {winRate.toFixed(1)}%
-                </span>
-                <span className={styles.statLabel}>Efectividad ({wonPicks}/{settledPicks.length})</span>
-              </div>
-            </>
-          )}
+          <div className={styles.statItem}><span className={styles.statValue}>{isMainSport ? matches.length : (day === 'today' ? usTodayPicks.length : usTomPicks.length)}</span><span className={styles.statLabel}>Partidos</span></div>
+          <div className={styles.statDivider} /><div className={styles.statItem}><span className={styles.statValue}>{totalPicksCalculated}</span><span className={styles.statLabel}>Picks</span></div>
+          <div className={styles.statDivider} /><div className={styles.statItem}><span className={styles.statValue}>{highValuePicks}</span><span className={styles.statLabel}>Relevantes</span></div>
+          <div className={styles.statDivider} /><div className={styles.statItem}><span className={styles.statValue}>+{(avgEV * 100).toFixed(1)}%</span><span className={styles.statLabel}>EV Promedio</span></div>
         </div>
       )}
 
-      {/* ── Results Chart ── */}
-      {settledPicks.length > 0 && sport !== 'basketball' && sport !== 'baseball' && (
-        <ResultsChart totalWins={wonPicks} totalLosses={settledPicks.length - wonPicks} />
-      )}
-
-      {/* ── Empty State ── */}
-      {isMainSport && matches.length === 0 && (
-        <div className={`glass ${styles.emptyState}`}>
-          <div className={styles.emptyIcon}>{sport === 'tennis' ? '🎾' : '⚽'}</div>
-          <h2 className={styles.emptyTitle}>Sin picks de {sport === 'tennis' ? 'tenis' : 'fútbol'}</h2>
-          <p className={styles.emptyText}>
-            No hay partidos analizados para esta fecha.
-          </p>
-          <Link href="/admin" className="btn btn-primary">
-            Ir a Panel Admin
-          </Link>
-        </div>
-      )}
-
-      {/* ── US Sports Info ── */}
-      {!isMainSport && parlays.length === 0 && (
-        <div className={`glass ${styles.emptyState}`}>
-          <div className={styles.emptyIcon}>{sport === 'basketball' ? '🏀' : '⚾'}</div>
-          <h2 className={styles.emptyTitle}>Sin parlay disponible de {sport === 'basketball' ? 'NBA' : 'MLB'}</h2>
-          <p className={styles.emptyText}>
-            No hay partidos programados en este momento. Vuelve más tarde.
-          </p>
-        </div>
-      )}
-
-      {!isMainSport && parlays.length > 0 && (
-        <div className={`glass ${styles.emptyState}`} style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(59, 130, 246, 0.05)' }}>
-          <div className={styles.emptyIcon}>{sport === 'basketball' ? '🏀' : '⚾'}</div>
-          <h2 className={styles.emptyTitle}>Parlay del Día — {sport === 'basketball' ? 'NBA' : 'MLB'}</h2>
-          <p className={styles.emptyText}>
-            Arriba encontrarás la combinación seleccionada por nuestro algoritmo para hoy. ¡Buena suerte!
-          </p>
-        </div>
-      )}
-
-      {/* ── Premium Pick ── */}
-      {isMainSport && premiumMatch && premiumPick && (
-        <section className={`${styles.premiumSection} animate-in delay-1`}>
-          <div className={styles.premiumLabel}>
-            <span>🏆</span> MEJOR PICK DE {sport === 'tennis' ? 'TENIS' : 'FÚTBOL'}
-          </div>
-          {sport === 'tennis' ? (
-            <TennisMatchCard match={premiumMatch as any} picks={[premiumPick as any]} featured />
-          ) : (
-            <FootballMatchCard match={premiumMatch as any} picks={[premiumPick as any]} featured />
-          )}
+      {premiumMatch && premiumPick && day === 'today' && sortBy === 'relevance' && (
+        <section className="animate-in delay-1" style={{ marginBottom: '3rem' }}>
+          <div className={styles.premiumLabel}><span>⭐</span> PICK PREMIUM DEL DÍA</div>
+          <FootballMatchCard match={premiumMatch} picks={[premiumPick]} featured={true} />
         </section>
       )}
 
-      {/* ── Picks por Horario (Time Slots) ── */}
       {isMainSport && matches.length > 0 && sortBy === 'relevance' && (
         <section className={`${styles.top12Section} animate-in delay-2`}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>
-              <span className={styles.sectionIcon}>⏰</span> Mejores Picks por Horario — {sport === 'tennis' ? 'Tenis' : 'Fútbol'} ({day === 'today' ? 'Hoy' : 'Mañana'})
-            </h2>
-            <p className={styles.sectionDesc}>Los 4-5 mejores picks de cada franja horaria, seleccionados por valor esperado.</p>
-          </div>
-          
-          {picksBySlot.map((slot, si) => (
-            slot.picks.length > 0 && (
-              <div key={si} className={styles.timeSlotGroup}>
-                <h3 className={styles.timeSlotLabel}>{slot.label}</h3>
-                <div className={styles.top12Grid}>
-                  {slot.picks.map((pick: any, i: number) => (
-                    <MiniPickCard 
-                      key={pick.id} 
-                      pick={pick} 
-                      sport={sport} 
-                      animClass={`animate-in delay-${Math.min(i + 3, 10)}`}
-                      localTime={getLocalTime(new Date(pick.parentMatch.date))}
-                    />
-                  ))}
-                </div>
-              </div>
-            )
+          <div className={styles.sectionHeader}><h2 className={styles.sectionTitle}><span className={styles.sectionIcon}>⏰</span> Mejores Picks por Horario — {sport === 'tennis' ? 'Tenis' : 'Fútbol'} ({day === 'today' ? 'Hoy' : 'Mañana'})</h2><p className={styles.sectionDesc}>Los mejores picks de cada franja horaria.</p></div>
+          {picksBySlot.map((slot, si) => slot.picks.length > 0 && (
+            <div key={si} className={styles.timeSlotGroup}><h3 className={styles.timeSlotLabel}>{slot.label}</h3><div className={styles.top12Grid}>
+              {slot.picks.map((pick: any, i: number) => <MiniPickCard key={pick.id} pick={pick} sport={sport} animClass={`animate-in delay-${Math.min(i + 3, 10)}`} localTime={getLocalTime(new Date(pick.parentMatch.date))} />)}
+            </div></div>
           ))}
         </section>
       )}
 
-      {/* ── US Individual Picks (Today) ── */}
-      {!isMainSport && usTodayPicks.length > 0 && (
+      {!isMainSport && day === 'today' && usTodayPicks.length > 0 && (
         <section className={styles.matchesSection} style={{ marginTop: '2rem' }}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>
-              <span className={styles.sectionIcon}>🔥</span> Picks para HOY — {sport === 'basketball' ? 'NBA' : 'MLB'}
-            </h2>
-          </div>
+          <div className={styles.sectionHeader}><h2 className={styles.sectionTitle}><span className={styles.sectionIcon}>🔥</span> Picks para HOY — {sport === 'basketball' ? 'NBA' : 'MLB'}</h2></div>
           <div className={styles.top12Grid}>
-            {usTodayPicks.map((pick: any, i: number) => (
-              <MiniPickCard 
-                key={`today-${i}`} 
-                pick={pick} 
-                sport={sport} 
-                animClass={`animate-in delay-${Math.min(i, 8)}`}
-              />
-            ))}
+            {usTodayPicks.map((pick: any, i: number) => <MiniPickCard key={`today-${i}`} pick={pick} sport={sport} animClass={`animate-in delay-${Math.min(i, 8)}`} />)}
           </div>
         </section>
       )}
 
-      {/* ── US Individual Picks (Tomorrow) ── */}
-      {!isMainSport && usTomPicks.length > 0 && (
+      {!isMainSport && day === 'tomorrow' && usTomPicks.length > 0 && (
         <section className={styles.matchesSection} style={{ marginTop: '3rem' }}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>
-              <span className={styles.sectionIcon}>🔜</span> Picks para MAÑANA — {sport === 'basketball' ? 'NBA' : 'MLB'}
-            </h2>
-          </div>
+          <div className={styles.sectionHeader}><h2 className={styles.sectionTitle}><span className={styles.sectionIcon}>🔜</span> Picks para MAÑANA — {sport === 'basketball' ? 'NBA' : 'MLB'}</h2></div>
           <div className={styles.top12Grid}>
-            {usTomPicks.map((pick: any, i: number) => (
-              <MiniPickCard 
-                key={`tom-${i}`} 
-                pick={pick} 
-                sport={sport} 
-                animClass={`animate-in delay-${Math.min(i, 8)}`}
-              />
-            ))}
+            {usTomPicks.map((pick: any, i: number) => <MiniPickCard key={`tom-${i}`} pick={pick} sport={sport} animClass={`animate-in delay-${Math.min(i, 8)}`} />)}
           </div>
         </section>
       )}
 
-      {/* ── All Matches (Main Sports) ── */}
-      {isMainSport && matches.length > 0 && (
-        <section className={styles.matchesSection}>
-          <h2 className={styles.sectionTitle}>
-            {sortBy === 'relevance' ? `Picks por Relevancia` : `Picks por Horario`} ({day === 'today' ? 'Hoy' : 'Mañana'})
-          </h2>
+      {!isMainSport && ((day === 'today' && usTodayPicks.length === 0) || (day === 'tomorrow' && usTomPicks.length === 0)) && (
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}>🦉</div>
+          <h3 className={styles.emptyTitle}>No hay picks programados para {day === 'today' ? 'hoy' : 'mañana'}</h3>
+          <p className={styles.emptyText}>Parece que no hay eventos de {sport === 'basketball' ? 'NBA' : 'MLB'} en esta fecha según el calendario oficial.</p>
+        </div>
+      )}
 
-          {sortBy === 'time' ? (
-            Object.entries(groups).map(([groupName, groupMatches], gi) => (
-              <div key={groupName} className={styles.tournamentGroup}>
-                <div className={styles.tournamentHeader}>
-                  <span className={styles.tournamentName}>{groupName}</span>
-                  {sport === 'tennis' && (
-                    <>
-                      <span className={`badge badge-${(groupMatches[0] as any).circuit.toLowerCase()}`}>
-                        {(groupMatches[0] as any).circuit}
-                      </span>
-                      <span className={`badge badge-${(groupMatches[0] as any).surface.toLowerCase()}`}>
-                        {(groupMatches[0] as any).surface}
-                      </span>
-                    </>
-                  )}
-                </div>
+      {isMainSport && sortBy === 'time' && groupedMatches && Object.entries(groupedMatches).map(([tourn, mList]: [string, any]) => (
+        <div key={tourn} className={styles.tournamentGroup}>
+          <div className={styles.tournamentHeader}><h3 className={styles.tournamentName}>{tourn}</h3></div>
+          <div className={styles.matchesGrid}>{mList.map((m: any) => sport === 'tennis' ? <TennisMatchCard key={m.id} match={m} picks={m.picks} /> : <FootballMatchCard key={m.id} match={m} picks={m.picks} />)}</div>
+        </div>
+      ))}
 
-                <div className={styles.matchesGrid}>
-                  {groupMatches
-                    .filter((m: any) => m.id !== premiumMatch?.id)
-                    .map((match: any, mi) => (
-                      match.picks.length > 0 && (
-                        sport === 'tennis' ? (
-                          <TennisMatchCard
-                            key={match.id}
-                            match={match as any}
-                            picks={match.picks as any}
-                            className={`animate-in delay-${Math.min(mi + 2, 6)}`}
-                          />
-                        ) : (
-                          <FootballMatchCard
-                            key={match.id}
-                            match={match as any}
-                            picks={match.picks as any}
-                            className={`animate-in delay-${Math.min(mi + 2, 6)}`}
-                          />
-                        )
-                      )
-                    ))}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className={styles.matchesGrid}>
-              {matches
-                .filter((m: any) => m.id !== premiumMatch?.id)
-                .map((match: any, mi) => (
-                  match.picks.length > 0 && (
-                    sport === 'tennis' ? (
-                      <TennisMatchCard
-                        key={match.id}
-                        match={match as any}
-                        picks={match.picks as any}
-                        className={`animate-in delay-${Math.min(mi + 2, 6)}`}
-                      />
-                    ) : (
-                      <FootballMatchCard
-                        key={match.id}
-                        match={match as any}
-                        picks={match.picks as any}
-                        className={`animate-in delay-${Math.min(mi + 2, 6)}`}
-                      />
-                    )
-                  )
-                ))}
-            </div>
-          )}
-        </section>
+      {((isMainSport && matches.length === 0)) && (
+        <div className={styles.emptyState}><div className={styles.emptyIcon}>🦉</div><h3 className={styles.emptyTitle}>No hay picks disponibles</h3><p className={styles.emptyText}>Estamos analizando los próximos partidos de {sport === 'tennis' ? 'tenis' : 'fútbol'}. Vuelve pronto para las mejores recomendaciones.</p></div>
       )}
     </div>
   );
 }
-
