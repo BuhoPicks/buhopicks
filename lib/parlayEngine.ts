@@ -17,11 +17,13 @@ export function generateParlays(tennisMatches: any[], footballMatches: any[]): P
 
   if (allPicks.length < 2) return [];
 
-  // ─── Parlay del Día (3-4 picks, high confidence, extremely solid) ───
-  // Filter for top quality picks across both sports
-  const dailyCandidates = allPicks
-    .filter(p => p.confidenceScore >= 65)
-    .sort((a, b) => b.expectedValue - a.expectedValue);
+  // ─── Parlay del Día (3-4 picks, top ranked) ───
+  const dailyCandidates = [...allPicks].sort((a, b) => {
+    // Rank by a mix of confidence and expected value
+    const scoreA = (a.confidenceScore / 100) + a.expectedValue;
+    const scoreB = (b.confidenceScore / 100) + b.expectedValue;
+    return scoreB - scoreA;
+  });
 
   const dailyPicks: any[] = [];
   const dailyMatches = new Set();
@@ -37,10 +39,11 @@ export function generateParlays(tennisMatches: any[], footballMatches: any[]): P
   const dailyProb = dailyPicks.reduce((acc, p) => acc * (p.estimatedProb || (p.confidenceScore / 100)), 1);
 
 
-  // ─── Aggressive Parlay (2-3 picks, high risk/reward) ───
+  // ─── Aggressive Parlay (2-3 picks, highest odds among remaining) ───
   const aggressiveCandidates = allPicks
-    .filter(p => !dailyMatches.has(p.match.id) && p.expectedValue > 0.03) 
+    .filter(p => !dailyMatches.has(p.match.id)) 
     .sort((a, b) => b.odds - a.odds);
+
 
   const aggressivePicks: any[] = [];
   const aggMatches = new Set();
