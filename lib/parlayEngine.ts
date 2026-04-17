@@ -55,10 +55,6 @@ export function generateParlays(tennisMatches: any[], footballMatches: any[]): P
     if (aggressivePicks.length >= 3) break;
   }
   
-  const aggressiveOdds = aggressivePicks.reduce((acc, p) => acc * p.odds, 1);
-  const aggressiveProb = aggressivePicks.reduce((acc, p) => acc * (p.estimatedProb || (p.confidenceScore / 100)), 1);
-
-
   const parlays: Parlay[] = [];
   
   if (dailyPicks.length >= 2) {
@@ -70,15 +66,7 @@ export function generateParlays(tennisMatches: any[], footballMatches: any[]): P
     });
   }
 
-  if (aggressivePicks.length >= 2) {
-    parlays.push({
-      type: 'aggressive',
-      picks: aggressivePicks,
-      totalOdds: aggressiveOdds,
-      combinedProb: aggressiveProb
-    });
-  }
-
   return parlays;
 }
+
 

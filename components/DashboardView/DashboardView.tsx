@@ -108,29 +108,13 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
 
   const parlays = [];
   if (sport === 'tennis') {
-    parlays.push(...generateParlays(matches, []).filter(p => !p.picks.some((pk:any) => pk.sport === 'football')));
+    const list = generateParlays(matches, []).filter(p => !p.picks.some((pk:any) => pk.sport === 'football'));
+    if (list[0]) parlays.push(list[0]);
   } else if (sport === 'football') {
-    parlays.push(...generateParlays([], matches).filter(p => !p.picks.some((pk:any) => pk.sport === 'tennis')));
+    const list = generateParlays([], matches).filter(p => !p.picks.some((pk:any) => pk.sport === 'tennis'));
+    if (list[0]) parlays.push(list[0]);
   }
 
-  // Filter US Parlays by day
-  if (sport === 'basketball') {
-    if (day === 'today') {
-      const nbaToday = await getBasketballParlay(todayStr);
-      if (nbaToday) parlays.push({ ...nbaToday, dayLabel: 'HOY' });
-    } else {
-      const nbaTom = await getBasketballParlay(tomorrowStr);
-      if (nbaTom) parlays.push({ ...nbaTom, dayLabel: 'MAÑANA' });
-    }
-  } else if (sport === 'baseball') {
-    if (day === 'today') {
-      const mlbToday = await getBaseballParlay(todayStr);
-      if (mlbToday) parlays.push({ ...mlbToday, dayLabel: 'HOY' });
-    } else {
-      const mlbTom = await getBaseballParlay(tomorrowStr);
-      if (mlbTom) parlays.push({ ...mlbTom, dayLabel: 'MAÑANA' });
-    }
-  }
 
   const premiumPick = isMainSport ? (matches as any[])
     .flatMap(m => m.picks.filter((p: any) => p.isPremiumPick))
