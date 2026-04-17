@@ -60,6 +60,9 @@ export default function ParlaySection({ parlays, day = 'today' }: ParlaySectionP
                   {parlay.type === 'solid' ? 'ALTA' : parlay.type === 'usa' ? 'MEDIA/ALTA' : 'MEDIA'}
                 </span>
               </div>
+              <div className={styles.probBadge}>
+                Prob. Combinada: <span>{(parlay.combinedProb * 100).toFixed(1)}%</span>
+              </div>
             </div>
           </div>
         ))}

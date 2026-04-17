@@ -6,6 +6,7 @@ export interface Parlay {
   type: 'solid' | 'aggressive' | 'usa';
   picks: any[];
   totalOdds: number;
+  combinedProb: number;
   dayLabel?: string;
 }
 
@@ -33,6 +34,8 @@ export function generateParlays(tennisMatches: any[], footballMatches: any[]): P
   }
 
   const dailyOdds = dailyPicks.reduce((acc, p) => acc * p.odds, 1);
+  const dailyProb = dailyPicks.reduce((acc, p) => acc * (p.estimatedProb || (p.confidenceScore / 100)), 1);
+
 
   // ─── Aggressive Parlay (2-3 picks, high risk/reward) ───
   const aggressiveCandidates = allPicks
@@ -50,6 +53,8 @@ export function generateParlays(tennisMatches: any[], footballMatches: any[]): P
   }
   
   const aggressiveOdds = aggressivePicks.reduce((acc, p) => acc * p.odds, 1);
+  const aggressiveProb = aggressivePicks.reduce((acc, p) => acc * (p.estimatedProb || (p.confidenceScore / 100)), 1);
+
 
   const parlays: Parlay[] = [];
   
@@ -57,7 +62,8 @@ export function generateParlays(tennisMatches: any[], footballMatches: any[]): P
     parlays.push({
       type: 'solid',
       picks: dailyPicks,
-      totalOdds: dailyOdds
+      totalOdds: dailyOdds,
+      combinedProb: dailyProb
     });
   }
 
@@ -65,7 +71,8 @@ export function generateParlays(tennisMatches: any[], footballMatches: any[]): P
     parlays.push({
       type: 'aggressive',
       picks: aggressivePicks,
-      totalOdds: aggressiveOdds
+      totalOdds: aggressiveOdds,
+      combinedProb: aggressiveProb
     });
   }
 

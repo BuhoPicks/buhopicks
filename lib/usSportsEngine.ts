@@ -128,7 +128,8 @@ export async function getBasketballParlay(dateStr: string): Promise<Parlay | nul
     if (selected.length < 1) return null;
     
     const totalOdds = selected.reduce((acc, p) => acc * p.odds, 1);
-    return { type: 'usa', picks: selected, totalOdds };
+    const combinedProb = selected.reduce((acc, p) => acc * (p.estimatedProb || (p.confidenceScore / 100)), 1);
+    return { type: 'usa', picks: selected, totalOdds, combinedProb };
   } catch (err) {
     return null;
   }
@@ -255,8 +256,9 @@ export async function getBaseballParlay(dateStr: string): Promise<Parlay | null>
     picks.sort((a, b) => b.confidenceScore - a.confidenceScore);
     const selected = picks.slice(0, Math.min(picks.length, 3));
     const totalOdds = selected.reduce((acc, p) => acc * p.odds, 1);
+    const combinedProb = selected.reduce((acc, p) => acc * (p.estimatedProb || (p.confidenceScore / 100)), 1);
 
-    return { type: 'usa', picks: selected, totalOdds };
+    return { type: 'usa', picks: selected, totalOdds, combinedProb };
   } catch (err) {
     return null;
   }

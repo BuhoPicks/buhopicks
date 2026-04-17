@@ -158,12 +158,29 @@
   margin-top: auto;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .confidence {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   font-weight: 600;
+  text-transform: uppercase;
+}
+
+.probBadge {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.probBadge span {
+  color: var(--text-primary);
+  font-weight: 800;
+  margin-left: 4px;
 }
 
 .confHigh { color: #4ADE80; }
