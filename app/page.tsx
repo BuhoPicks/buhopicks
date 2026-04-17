@@ -1,8 +1,11 @@
 import Link from 'next/link';
 import prisma from '@/lib/prisma';
 import styles from './page.module.css';
+import ParlaySection from '@/components/ParlaySection/ParlaySection';
+import { getBasketballParlay, getBaseballParlay } from '@/lib/usSportsEngine';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 async function getTopPicks() {
   const tennis = await prisma.tennisPick.findMany({
@@ -22,6 +25,17 @@ async function getTopPicks() {
 
 export default async function LandingPage() {
   const { tennis, football } = await getTopPicks();
+  
+  const todayStr = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(new Date()).replace(/-/g, '');
+  
+  const nbaParlay = await getBasketballParlay(todayStr);
+  const mlbParlay = await getBaseballParlay(todayStr);
+  const parlays = [nbaParlay, mlbParlay].filter(Boolean) as any[];
 
   return (
     <div className={styles.landingContainer}>
@@ -85,6 +99,12 @@ export default async function LandingPage() {
           </div>
         </Link>
       </div>
+
+      {parlays.length > 0 && (
+        <div style={{ maxWidth: '1200px', margin: '0 auto 4rem auto', width: '100%' }}>
+           <ParlaySection parlays={parlays} day="today" />
+        </div>
+      )}
 
       {/* Combined Quick View */}
       <section className={styles.quickView}>

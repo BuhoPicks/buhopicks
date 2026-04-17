@@ -25,8 +25,11 @@ export default function ParlaySection({ parlays, day = 'today' }: ParlaySectionP
             <div className={styles.cardHeader}>
               <div className={styles.typeLabel}>
                 {parlay.dayLabel && <span className={styles.dayTag}>{parlay.dayLabel}</span>}
-                {parlay.type === 'solid' ? '🦉 PARLAY DEL DÍA' 
-                  : parlay.type === 'aggressive' ? '🚀 PARLAY AGRESIVO' 
+                {parlay.type === 'solid' ? (
+                  parlay.picks[0]?.sport === 'basketball' ? '🏀 PARLAY NBA DEL DÍA' :
+                  parlay.picks[0]?.sport === 'baseball' ? '⚾ PARLAY MLB DEL DÍA' :
+                  '🦉 PARLAY DEL DÍA'
+                ) : parlay.type === 'aggressive' ? '🚀 PARLAY AGRESIVO' 
                   : parlay.picks[0]?.sport === 'basketball' ? '🏀 PARLAY NBA' 
                   : parlay.picks[0]?.sport === 'baseball' ? '⚾ PARLAY MLB'
                   : '🇺🇸 PARLAY USA'}

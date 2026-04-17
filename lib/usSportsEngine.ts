@@ -2,7 +2,12 @@ import { Parlay } from './parlayEngine';
 
 
 async function fetchAndProcessExp(url: string, sportName: string, icon: string): Promise<any[]> {
-  const res = await fetch(url, { cache: 'no-store' }).catch(() => null);
+  const res = await fetch(url, { 
+    cache: 'no-store',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+  }).catch(() => null);
   const data = res && res.ok ? await res.json() : { events: [] };
   const picks: any[] = [];
   
@@ -122,14 +127,17 @@ export async function getBasketballParlay(dateStr: string): Promise<Parlay | nul
     const bestML = moneylinePicks.sort((a, b) => b.confidenceScore - a.confidenceScore);
     const bestProps = propPicks.sort((a, b) => b.confidenceScore - a.confidenceScore).slice(0, 3);
     
-    // Combine: all moneyline + top 3 props, take best 3 overall
-    const combined = [...bestML, ...bestProps];
-    const selected = combined.slice(0, Math.max(3, Math.min(combined.length, 4)));
-    if (selected.length < 1) return null;
+    // Combine and sort by HIGHEST confidence to ensure "solid" picks
+    const combined = [...bestML, ...bestProps].sort((a, b) => b.confidenceScore - a.confidenceScore);
+    
+    // Take only the top 3 most solid picks for a "solid" parlay
+    const selected = combined.slice(0, 3);
+    if (selected.length < 2) return null; // Need at least 2 for a parlay
     
     const totalOdds = selected.reduce((acc, p) => acc * p.odds, 1);
     const combinedProb = selected.reduce((acc, p) => acc * (p.estimatedProb || (p.confidenceScore / 100)), 1);
-    return { type: 'usa', picks: selected, totalOdds, combinedProb };
+    
+    return { type: 'solid', picks: selected, totalOdds, combinedProb };
   } catch (err) {
     return null;
   }
@@ -138,7 +146,12 @@ export async function getBasketballParlay(dateStr: string): Promise<Parlay | nul
 async function generateNBAPlayerProps(dateStr: string): Promise<any[]> {
   try {
     const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${dateStr}`;
-    const res = await fetch(url, { cache: 'no-store' }).catch(() => null);
+    const res = await fetch(url, { 
+      cache: 'no-store',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    }).catch(() => null);
     if (!res || !res.ok) return [];
     const data = await res.json();
     const props: any[] = [];
@@ -253,12 +266,17 @@ export async function getBaseballParlay(dateStr: string): Promise<Parlay | null>
     const picks = await fetchAndProcessExp(url, 'baseball', '⚾');
     if (picks.length < 1) return null;
 
+    // Sort by confidence to get the most solid ones
     picks.sort((a, b) => b.confidenceScore - a.confidenceScore);
-    const selected = picks.slice(0, Math.min(picks.length, 3));
+    
+    // Take top 3 for a solid parlay
+    const selected = picks.slice(0, 3);
+    if (selected.length < 2) return null;
+
     const totalOdds = selected.reduce((acc, p) => acc * p.odds, 1);
     const combinedProb = selected.reduce((acc, p) => acc * (p.estimatedProb || (p.confidenceScore / 100)), 1);
 
-    return { type: 'usa', picks: selected, totalOdds, combinedProb };
+    return { type: 'solid', picks: selected, totalOdds, combinedProb };
   } catch (err) {
     return null;
   }

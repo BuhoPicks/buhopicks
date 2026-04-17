@@ -90,13 +90,19 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
     
   const lastSync = isMainSport ? await getLastSyncLog(sport) : null;
   
-  // Mexican date strings for US API calls
-  const mxOffset = -6 * 60 * 60 * 1000;
-  const mxTime = new Date(new Date().getTime() + mxOffset);
-  const mxTomTime = new Date(mxTime.getTime() + 86400000);
-  
-  const todayStr = mxTime.toISOString().split('T')[0].replace(/-/g, '');
-  const tomorrowStr = mxTomTime.toISOString().split('T')[0].replace(/-/g, '');
+  const todayStr = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(new Date()).replace(/-/g, '');
+
+  const tomorrowStr = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(new Date(Date.now() + 86400000)).replace(/-/g, '');
 
   const usTodayPicks = sport === 'basketball' ? await getBasketballPicks(todayStr)
                    : sport === 'baseball' ? await getBaseballPicks(todayStr)
@@ -113,6 +119,12 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
   } else if (sport === 'football') {
     const list = generateParlays([], matches).filter(p => !p.picks.some((pk:any) => pk.sport === 'tennis'));
     if (list[0]) parlays.push(list[0]);
+  } else if (sport === 'basketball') {
+    const p = await getBasketballParlay(day === 'today' ? todayStr : tomorrowStr);
+    if (p) parlays.push(p);
+  } else if (sport === 'baseball') {
+    const p = await getBaseballParlay(day === 'today' ? todayStr : tomorrowStr);
+    if (p) parlays.push(p);
   }
 
 
