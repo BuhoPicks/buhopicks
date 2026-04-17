@@ -111,24 +111,24 @@ export async function runDailyFootballSync() {
         };
 
         // 🦉 NEW ANALYSIS ENGINE: Heuristics based on ESPN data
-        const homeRank = parseInt(home.rank) || 99;
-        const awayRank = parseInt(away.rank) || 99;
+        const homeRank = parseInt(home.rank) || 50; // Neutral default
+        const awayRank = parseInt(away.rank) || 50;
         const homeStrength = (100 - homeRank) / 100;
         const awayStrength = (100 - awayRank) / 100;
-        const isMajorLeague = leagues.includes(event.league?.slug || '');
         
-        // Base probabilities
-        let homeProb = 0.38 + (awayRank - homeRank) * 0.005;
+        // Base probabilities with ranking influence
+        let homeProb = 0.38 + (awayRank - homeRank) * 0.004;
         let drawProb = 0.28;
         let awayProb = 1 - homeProb - drawProb;
         
-        // Clamp
-        homeProb = Math.max(0.1, Math.min(0.8, homeProb));
-        awayProb = Math.max(0.1, Math.min(0.8, awayProb));
+        // Clamp to realistic bounds
+        homeProb = Math.max(0.15, Math.min(0.75, homeProb));
+        awayProb = Math.max(0.15, Math.min(0.75, awayProb));
         drawProb = 1 - homeProb - awayProb;
 
-        const over25Prob = Math.min(0.75, 0.45 + (homeStrength + awayStrength) * 0.15);
-        const bttsProb = Math.min(0.70, 0.40 + (homeStrength + awayStrength) * 0.12);
+        const over25Prob = Math.max(0.3, Math.min(0.75, 0.45 + (homeStrength + awayStrength) * 0.1));
+        const bttsProb = Math.max(0.3, Math.min(0.70, 0.40 + (homeStrength + awayStrength) * 0.08));
+
 
         const homeWinPick = { 
             market: 'Ganador', 
@@ -168,7 +168,7 @@ export async function runDailyFootballSync() {
           };
           
           // Add Corners Pick (Heuristic based on team ranking)
-          const cornerProb = 0.52 + (Math.random() * 0.1);
+          const cornerProb = 0.52 + (pseudoRandom(10) * 0.1);
           const cornersPick = {
             market: 'Corners',
             selection: 'Más 8.5 Corners',
@@ -176,6 +176,7 @@ export async function runDailyFootballSync() {
             desc: 'Dinámica ofensiva sugiere múltiples tiros de esquina',
             type: 'CORNERS'
           };
+
 
           const allOptions = [homeWinPick, awayWinPick, drawPick, ouPick, bttsPick, cornersPick].sort((a,b) => b.prob - a.prob);
 
@@ -247,6 +248,18 @@ export async function runDailyFootballSync() {
       });
       console.log(`⭐ Marked pick ${topPick.id} as Premium Football Pick.`);
     }
+
+    // CLEANUP: Delete matches within this date range that resulted in 0 picks
+    const deletedOrphans = await prisma.footballMatch.deleteMany({
+        where: {
+            date: dateRange,
+            picks: { none: {} }
+        }
+    });
+    if (deletedOrphans.count > 0) {
+        console.log(`🧹 Cleaned up ${deletedOrphans.count} matches without picks.`);
+    }
+
 
     // Log sync
     await prisma.dailySyncLog.create({
