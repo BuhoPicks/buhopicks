@@ -16,29 +16,35 @@ export function generateParlays(tennisMatches: any[], footballMatches: any[]): P
 
   if (allPicks.length < 2) return [];
 
-  // ─── Solid Parlay (2-3 picks, high confidence, safe odds) ───
-  // Filter for picks with confidence > 70 and decent odds
-  const solidCandidates = allPicks
-    .filter(p => p.confidenceScore >= 70 && p.odds <= 1.9)
-    .sort((a, b) => b.confidenceScore - a.confidenceScore);
-
-  const solidPicks = solidCandidates.slice(0, 3);
-  const solidOdds = solidPicks.reduce((acc, p) => acc * p.odds, 1);
-
-  // ─── Aggressive Parlay (2-3 picks, high EV, higher odds) ───
-  const aggressiveCandidates = allPicks
-    .filter(p => p.expectedValue > 0.05) // Positive EV
+  // ─── Parlay del Día (3-4 picks, high confidence, extremely solid) ───
+  // Filter for top quality picks across both sports
+  const dailyCandidates = allPicks
+    .filter(p => p.confidenceScore >= 65)
     .sort((a, b) => b.expectedValue - a.expectedValue);
 
-  // Ensure we don't pick the exact same matches if possible, or at least different markets
+  const dailyPicks: any[] = [];
+  const dailyMatches = new Set();
+  for (const pick of dailyCandidates) {
+    if (!dailyMatches.has(pick.match.id)) {
+      dailyPicks.push(pick);
+      dailyMatches.add(pick.match.id);
+    }
+    if (dailyPicks.length >= 4) break;
+  }
+
+  const dailyOdds = dailyPicks.reduce((acc, p) => acc * p.odds, 1);
+
+  // ─── Aggressive Parlay (2-3 picks, high risk/reward) ───
+  const aggressiveCandidates = allPicks
+    .filter(p => !dailyMatches.has(p.match.id) && p.expectedValue > 0.03) 
+    .sort((a, b) => b.odds - a.odds);
+
   const aggressivePicks: any[] = [];
-  const seenMatches = new Set();
-  
+  const aggMatches = new Set();
   for (const pick of aggressiveCandidates) {
-    const matchId = pick.match.id;
-    if (!seenMatches.has(matchId)) {
+    if (!aggMatches.has(pick.match.id)) {
       aggressivePicks.push(pick);
-      seenMatches.add(matchId);
+      aggMatches.add(pick.match.id);
     }
     if (aggressivePicks.length >= 3) break;
   }
@@ -47,11 +53,11 @@ export function generateParlays(tennisMatches: any[], footballMatches: any[]): P
 
   const parlays: Parlay[] = [];
   
-  if (solidPicks.length >= 2) {
+  if (dailyPicks.length >= 2) {
     parlays.push({
       type: 'solid',
-      picks: solidPicks,
-      totalOdds: solidOdds
+      picks: dailyPicks,
+      totalOdds: dailyOdds
     });
   }
 
@@ -65,3 +71,4 @@ export function generateParlays(tennisMatches: any[], footballMatches: any[]): P
 
   return parlays;
 }
+
