@@ -2,39 +2,103 @@ import Link from 'next/link';
 import prisma from '@/lib/prisma';
 import styles from './page.module.css';
 import ParlaySection from '@/components/ParlaySection/ParlaySection';
-import { getBasketballParlay, getBaseballParlay } from '@/lib/usSportsEngine';
+import { 
+  getBasketballPicks, 
+  getBaseballPicks, 
+  getBasketballParlay, 
+  getBaseballParlay 
+} from '@/lib/usSportsEngine';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-async function getTopPicks() {
-  const tennis = await prisma.tennisPick.findMany({
-    take: 5,
-    orderBy: { expectedValue: 'desc' },
-    include: { match: true }
-  });
-  
-  const football = await prisma.footballPick.findMany({
-    take: 5,
-    orderBy: { expectedValue: 'desc' },
-    include: { match: true }
-  });
-  
-  return { tennis, football };
+async function getLaFija(todayStr: string) {
+  // Fix: Use Mexico City timezone for database queries to match todayStr
+  const now = new Date();
+  const todayStart = new Date(now.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
+  todayStart.setHours(0,0,0,0);
+  const todayEnd = new Date(todayStart);
+  todayEnd.setHours(23,59,59,999);
+
+  const [tennisPicks, footballPicks] = await Promise.all([
+    prisma.tennisPick.findMany({
+      where: { 
+        status: 'PENDING',
+        match: { date: { gte: todayStart, lte: todayEnd } } 
+      },
+      orderBy: { confidenceScore: 'desc' },
+      take: 5,
+      include: { match: true }
+    }),
+    prisma.footballPick.findMany({
+      where: { 
+        status: 'PENDING',
+        match: { date: { gte: todayStart, lte: todayEnd } } 
+      },
+      orderBy: { confidenceScore: 'desc' },
+      take: 5,
+      include: { match: true }
+    })
+  ]);
+
+  const basketballPicks = await getBasketballPicks(todayStr);
+  const baseballPicks = await getBaseballPicks(todayStr);
+
+  const allPicks: any[] = [
+    ...tennisPicks.map(p => ({ 
+      ...p, 
+      sport: 'tennis', 
+      sportIcon: '🎾', 
+      matchName: `${p.match.player1Name} vs ${p.match.player2Name}` 
+    })),
+    ...footballPicks.map(p => ({ 
+      ...p, 
+      sport: 'football', 
+      sportIcon: '⚽', 
+      matchName: `${p.match.homeTeam} vs ${p.match.awayTeam}` 
+    })),
+    ...basketballPicks.map(p => ({ 
+      ...p, 
+      matchName: `${p.match.player1Name} vs ${p.match.player2Name}`,
+      sportIcon: p.icon || '🏀'
+    })),
+    ...baseballPicks.map(p => ({ 
+      ...p, 
+      matchName: `${p.match.player1Name} vs ${p.match.player2Name}`,
+      sportIcon: p.icon || '⚾'
+    }))
+  ];
+
+  if (allPicks.length === 0) return null;
+
+  // Find the single most solid pick based on confidenceScore
+  return allPicks.sort((a, b) => b.confidenceScore - a.confidenceScore)[0];
+}
+
+async function getStats() {
+  const tennisCount = await prisma.tennisPick.count();
+  const footballCount = await prisma.footballPick.count();
+  return { tennisCount, footballCount };
 }
 
 export default async function LandingPage() {
-  const { tennis, football } = await getTopPicks();
-  
   const todayStr = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Mexico_City',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'
   }).format(new Date()).replace(/-/g, '');
+
+  const [{ tennisCount, footballCount }, laFija] = await Promise.all([
+    getStats(),
+    getLaFija(todayStr)
+  ]);
   
-  const nbaParlay = await getBasketballParlay(todayStr);
-  const mlbParlay = await getBaseballParlay(todayStr);
+  // Parlays for the middle section
+  const [nbaParlay, mlbParlay] = await Promise.all([
+    getBasketballParlay(todayStr),
+    getBaseballParlay(todayStr)
+  ]);
   const parlays = [nbaParlay, mlbParlay].filter(Boolean) as any[];
 
   return (
@@ -57,7 +121,7 @@ export default async function LandingPage() {
             <h2 className={styles.cardTitle}>Panel Tenis</h2>
             <p className={styles.cardDesc}>ATP, WTA & ITF</p>
             <div className={styles.cardPreview}>
-              {tennis.length} picks analizados hoy
+              {tennisCount} picks analizados hoy
             </div>
             <span className={styles.cardAction}>Entrar →</span>
           </div>
@@ -69,7 +133,7 @@ export default async function LandingPage() {
             <h2 className={styles.cardTitle}>Panel Fútbol</h2>
             <p className={styles.cardDesc}>Ligas Europeas & Copa</p>
             <div className={styles.cardPreview}>
-              {football.length} picks analizados hoy
+              {footballCount} picks analizados hoy
             </div>
             <span className={styles.cardAction}>Entrar →</span>
           </div>
@@ -106,30 +170,46 @@ export default async function LandingPage() {
         </div>
       )}
 
-      {/* Combined Quick View */}
-      <section className={styles.quickView}>
-        <h3 className={styles.quickTitle}>🔥 Picks Destacados del Día</h3>
-        <div className={styles.quickGrid}>
-          <div className={styles.quickCol}>
-            <h4>Top Tenis</h4>
-            {tennis.slice(0, 3).map(p => (
-              <div key={p.id} className={styles.quickItem}>
-                <span className={styles.quickMatch}>{p.match.player1Name} vs {p.match.player2Name}</span>
-                <span className={styles.quickPick}>{p.description} (@{p.odds.toFixed(2)})</span>
+      {/* La Fija del Día */}
+      {laFija && (
+        <section className={styles.laFijaSection}>
+          <div className={styles.laFijaBadge}>🌟 LA FIJA DEL DÍA</div>
+          <div className={styles.laFijaCard}>
+            <div className={styles.laFijaMain}>
+              <div className={styles.laFijaSport}>
+                <span className={styles.laFijaIcon}>{laFija.sportIcon}</span>
+                <span className={styles.laFijaSportName}>{laFija.sport?.toUpperCase() || 'TOP PICK'}</span>
               </div>
-            ))}
-          </div>
-          <div className={styles.quickCol}>
-            <h4>Top Fútbol</h4>
-            {football.slice(0, 3).map(p => (
-              <div key={p.id} className={styles.quickItem}>
-                <span className={styles.quickMatch}>{p.match.homeTeam} vs {p.match.awayTeam}</span>
-                <span className={styles.quickPick}>{p.description} (@{p.odds.toFixed(2)})</span>
+              <h2 className={styles.laFijaMatch}>{laFija.matchName}</h2>
+              <div className={styles.laFijaPickBox}>
+                <span className={styles.laFijaPick}>{laFija.description}</span>
+                <span className={styles.laFijaOdds}>@{laFija.odds.toFixed(2)}</span>
               </div>
-            ))}
+            </div>
+            
+            <div className={styles.laFijaStats}>
+              <div className={styles.laFijaConf}>
+                <div className={styles.confCircle}>
+                  <svg viewBox="0 0 36 36" className={styles.circularChart}>
+                    <path className={styles.circleBg} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path className={styles.circle} style={{ strokeDasharray: `${laFija.confidenceScore}, 100` }} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <div className={styles.confText}>
+                    <span>{laFija.confidenceScore}%</span>
+                    <small>Solidez</small>
+                  </div>
+                </div>
+              </div>
+              <div className={styles.laFijaExpl}>
+                <p>{laFija.explanation.length > 200 ? laFija.explanation.substring(0, 200) + '...' : laFija.explanation}</p>
+                <Link href={laFija.sport === 'tennis' ? '/tennis' : laFija.sport === 'football' ? '/football' : laFija.sport === 'basketball' ? '/basketball' : '/baseball'} className={styles.laFijaLink}>
+                  Ver análisis completo →
+                </Link>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <footer className={styles.landingFooter}>
         <Link href="/admin" className="btn btn-ghost">⚙️ Configuración y Sincronización Manual</Link>
