@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/automation/daily-sync?sport=tennis",
+      "schedule": "0 */8 * * *"
+    },
+    {
+      "path": "/api/automation/daily-sync?sport=football",
+      "schedule": "5 */8 * * *"
+    },
+    {
+      "path": "/api/automation/daily-sync?sport=nba",
+      "schedule": "10 */8 * * *"
+    },
+    {
+      "path": "/api/automation/daily-sync?sport=mlb",
+      "schedule": "15 */8 * * *"
+    }
+  ]
+}
