@@ -17,7 +17,7 @@ export function generateParlays(tennisMatches: any[], footballMatches: any[]): P
 
   if (allPicks.length < 2) return [];
 
-  // ─── Parlay del Día (3-4 picks, top ranked) ───
+  // ─── Picks más sólidos del día (3-4 picks, top ranked) ───
   const dailyCandidates = [...allPicks].sort((a, b) => {
     // Rank by a mix of confidence and expected value
     const scoreA = (a.confidenceScore / 100) + a.expectedValue;

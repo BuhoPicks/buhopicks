@@ -1,20 +1,16 @@
 {
   "crons": [
     {
+      "path": "/api/automation/daily-sync?sport=football",
+      "schedule": "1 0,8,16 * * *"
+    },
+    {
       "path": "/api/automation/daily-sync?sport=tennis",
-      "schedule": "0 */8 * * *"
+      "schedule": "6 0,8,16 * * *"
     },
     {
       "path": "/api/automation/daily-sync?sport=football",
-      "schedule": "5 */8 * * *"
-    },
-    {
-      "path": "/api/automation/daily-sync?sport=nba",
-      "schedule": "10 */8 * * *"
-    },
-    {
-      "path": "/api/automation/daily-sync?sport=mlb",
-      "schedule": "15 */8 * * *"
+      "schedule": "0 4,12,20 * * *"
     }
   ]
 }

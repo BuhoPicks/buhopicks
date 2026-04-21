@@ -14,9 +14,9 @@ export default function ParlaySection({ parlays, day = 'today' }: ParlaySectionP
     <section className={styles.container}>
       <div className={styles.header}>
         <h2 className={styles.title}>
-          <span className={styles.icon}>💎</span> Sugerencias de Parlay para {day === 'today' ? 'Hoy' : 'Mañana'}
+          <span className={styles.icon}>💎</span> Picks más sólidos del día — {day === 'today' ? 'Hoy' : 'Mañana'}
         </h2>
-        <p className={styles.subtitle}>Combinaciones optimizadas por nuestro algoritmo estadístico.</p>
+        <p className={styles.subtitle}>Los picks con mayor probabilidad estadística de acierto, seleccionados por nuestro algoritmo.</p>
       </div>
 
       <div className={styles.grid}>
@@ -25,17 +25,16 @@ export default function ParlaySection({ parlays, day = 'today' }: ParlaySectionP
             <div className={styles.cardHeader}>
               <div className={styles.typeLabel}>
                 {parlay.dayLabel && <span className={styles.dayTag}>{parlay.dayLabel}</span>}
-                {parlay.type === 'solid' ? (
-                  parlay.picks[0]?.sport === 'basketball' ? '🏀 PARLAY NBA DEL DÍA' :
-                  parlay.picks[0]?.sport === 'baseball' ? '⚾ PARLAY MLB DEL DÍA' :
-                  '🦉 PARLAY DEL DÍA'
-                ) : parlay.type === 'aggressive' ? '🚀 PARLAY AGRESIVO' 
-                  : parlay.picks[0]?.sport === 'basketball' ? '🏀 PARLAY NBA' 
-                  : parlay.picks[0]?.sport === 'baseball' ? '⚾ PARLAY MLB'
-                  : '🇺🇸 PARLAY USA'}
+                {parlay.picks[0]?.sport === 'basketball'
+                  ? '🏀 PICKS MÁS SÓLIDOS — NBA'
+                  : parlay.picks[0]?.sport === 'baseball'
+                  ? '⚾ PICKS MÁS SÓLIDOS — MLB'
+                  : parlay.picks[0]?.sport === 'tennis'
+                  ? '🎾 PICKS MÁS SÓLIDOS — TENIS'
+                  : '⚽ PICKS MÁS SÓLIDOS DEL DÍA'}
               </div>
               <div className={styles.oddsTotal}>
-                Cuota: <span>{parlay.totalOdds.toFixed(2)}</span>
+                Cuota total: <span>{parlay.totalOdds.toFixed(2)}</span>
               </div>
             </div>
 
@@ -43,7 +42,7 @@ export default function ParlaySection({ parlays, day = 'today' }: ParlaySectionP
               {parlay.picks.map((pick, i) => (
                 <div key={i} className={styles.pickItem}>
                   <div className={styles.pickMatch}>
-                    <span className={styles.sportIcon}>{pick.icon || (pick.sport === 'tennis' ? '🎾' : '⚽')}</span>
+                    <span className={styles.sportIcon}>{pick.icon || (pick.sport === 'tennis' ? '🎾' : pick.sport === 'basketball' ? '🏀' : pick.sport === 'baseball' ? '⚾' : '⚽')}</span>
                     {pick.sport === 'basketball' || pick.sport === 'baseball' || pick.sport === 'tennis' 
                       ? `${pick.match.player1Name} vs ${pick.match.player2Name}` 
                       : `${pick.match.homeTeam} vs ${pick.match.awayTeam}`
@@ -59,9 +58,7 @@ export default function ParlaySection({ parlays, day = 'today' }: ParlaySectionP
 
             <div className={styles.cardFooter}>
               <div className={styles.confidence}>
-                Confianza: <span className={parlay.type === 'solid' ? styles.confHigh : parlay.type === 'usa' ? styles.confUsa : styles.confMed}>
-                  {parlay.type === 'solid' ? 'ALTA' : parlay.type === 'usa' ? 'MEDIA/ALTA' : 'MEDIA'}
-                </span>
+                Confianza: <span className={styles.confHigh}>ALTA</span>
               </div>
               <div className={styles.probBadge}>
                 Prob. Combinada: <span>{(parlay.combinedProb * 100).toFixed(1)}%</span>

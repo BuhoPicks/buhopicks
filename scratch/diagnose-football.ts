@@ -1,40 +1,40 @@
-
-import prisma from '../lib/prisma';
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 
 async function diagnose() {
-  const total = await prisma.footballMatch.count();
-  console.log(`Total Football Matches in DB: ${total}`);
-  
-  const all = await prisma.footballMatch.findMany({
-    orderBy: { date: 'asc' },
-    take: 10
-  });
-  
-  if (all.length > 0) {
-    console.log('Earliest 10 matches dates:');
-    all.forEach(m => console.log(`- ${m.homeTeam} vs ${m.awayTeam} at ${m.date.toISOString()}`));
-  }
+  const mxOffset = -6 * 60 * 60 * 1000;
+  const now = new Date();
+  const mxNow = new Date(now.getTime() + mxOffset);
+  const mxTodayStart = new Date(Date.UTC(mxNow.getUTCFullYear(), mxNow.getUTCMonth(), mxNow.getUTCDate()));
+  const start = new Date(mxTodayStart.getTime() - mxOffset);
+  const end = new Date(start.getTime() + 86400000);
 
-  const latest = await prisma.footballMatch.findMany({
-    orderBy: { date: 'desc' },
-    take: 10
-  });
-  
-  if (latest.length > 0) {
-    console.log('Latest 10 matches dates:');
-    latest.forEach(m => console.log(`- ${m.homeTeam} vs ${m.awayTeam} at ${m.date.toISOString()}`));
-  }
+  console.log('--- DB DIAGNOSTIC ---');
+  console.log('Date Window:', start.toISOString(), 'to', end.toISOString());
 
-  // Check specifically for April 17th (Mexico Time)
-  // Mexico is UTC-6. So April 17 00:00 MX is April 17 06:00 UTC.
-  const checkStart = new Date('2026-04-17T06:00:00Z');
-  const checkEnd = new Date('2026-04-18T06:00:00Z');
-  
-  const tomorrowMatches = await prisma.footballMatch.findMany({
-    where: { date: { gte: checkStart, lt: checkEnd } }
+  const matchCount = await prisma.footballMatch.count({
+    where: { date: { gte: start, lt: end } }
   });
-  
-  console.log(`Matches found for tomorrow (April 17 MX Window): ${tomorrowMatches.length}`);
+  console.log('Matches found for today:', matchCount);
+
+  const picks = await prisma.footballPick.findMany({
+    where: { match: { date: { gte: start, lt: end } } },
+    orderBy: { confidenceScore: 'desc' },
+    include: { match: true }
+  });
+  console.log('Total football picks:', picks.length);
+
+  const markets = [...new Set(picks.map(p => p.market))];
+  console.log('Markets present:', markets);
+
+  const premiumPicks = picks.filter(p => p.isPremiumPick);
+  console.log('Premium picks:', premiumPicks.length);
+
+  if (picks.length > 0) {
+    console.log('Sample Pick:', picks[0].description, '@', picks[0].odds, 'Confidence:', picks[0].confidenceScore);
+  } else {
+    console.log('WARNING: No football picks found for today in DB.');
+  }
 }
 
-diagnose().finally(() => prisma.$disconnect());
+diagnose().catch(console.error);

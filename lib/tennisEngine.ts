@@ -75,11 +75,25 @@ const TOURNAMENT_LEVEL_WEIGHTS: Record<string, number> = {
 
 // ─── ESPN API Helpers ─────────────────────────────────────────────────────────
 
+/**
+ * Format date for ESPN API using Mexico City timezone.
+ * This ensures alignment with the dashboard's timezone-based queries.
+ */
 function formatDateForESPN(date: Date): string {
-  const d = new Date(date);
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}${m}${day}`;
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date).replace(/-/g, '');
+}
+
+/**
+ * Get Mexico City date string for today + offsetDays.
+ */
+function getMXDateStr(offsetDays: number): string {
+  const target = new Date(Date.now() + offsetDays * 86400000);
+  return formatDateForESPN(target);
 }
 
 async function fetchTennisEvents(circuit: 'atp' | 'wta', dateStr: string): Promise<any[]> {
@@ -558,19 +572,25 @@ export async function runDailyTennisSync(): Promise<{
   const startTime = Date.now();
   console.log('🎾 Starting BH Analysis Tennis Daily Sync...');
 
+  // Use Mexico City timezone for date strings to match dashboard queries
+  const todayStr    = getMXDateStr(0);
+  const tomorrowStr = getMXDateStr(1);
+  const dayAfterStr = getMXDateStr(2);
+
+  console.log(`📡 Tennis sync dates (MX timezone): today=${todayStr}, tomorrow=${tomorrowStr}, dayAfter=${dayAfterStr}`);
+
   const today    = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const todayStr    = formatDateForESPN(today);
-  const tomorrowStr = formatDateForESPN(tomorrow);
-
-  // Fetch from ESPN (ATP + WTA, today + tomorrow)
-  const [atpToday, atpTomorrow, wtaToday, wtaTomorrow, sofaToday, sofaTomorrow] = await Promise.all([
+  // Fetch from ESPN (ATP + WTA, today + tomorrow + day after)
+  const [atpToday, atpTomorrow, atpDayAfter, wtaToday, wtaTomorrow, wtaDayAfter, sofaToday, sofaTomorrow] = await Promise.all([
     fetchTennisEvents('atp', todayStr),
     fetchTennisEvents('atp', tomorrowStr),
+    fetchTennisEvents('atp', dayAfterStr),
     fetchTennisEvents('wta', todayStr),
     fetchTennisEvents('wta', tomorrowStr),
+    fetchTennisEvents('wta', dayAfterStr),
     fetchSofascoreTennisMatches(today),
     fetchSofascoreTennisMatches(tomorrow),
   ]);
@@ -578,8 +598,10 @@ export async function runDailyTennisSync(): Promise<{
   const espnEvents = [
     ...atpToday.map(e => ({ ...e, _circuit: 'ATP' })),
     ...atpTomorrow.map(e => ({ ...e, _circuit: 'ATP' })),
+    ...atpDayAfter.map(e => ({ ...e, _circuit: 'ATP' })),
     ...wtaToday.map(e => ({ ...e, _circuit: 'WTA' })),
     ...wtaTomorrow.map(e => ({ ...e, _circuit: 'WTA' })),
+    ...wtaDayAfter.map(e => ({ ...e, _circuit: 'WTA' })),
   ];
 
   // Merge with Sofascore
@@ -592,18 +614,20 @@ export async function runDailyTennisSync(): Promise<{
     if (allEvents[0].competitions) console.log('🔍 Competitions present:', allEvents[0].competitions.length);
   }
 
+  // Date range using broader window to capture today+tomorrow+dayAfter
   const dateRange = {
-    gte: new Date(today.getFullYear(), today.getMonth(), today.getDate()),
-    lt:  new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate() + 1),
+    gte: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1),
+    lt:  new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate() + 2),
   };
 
-  // Clear existing data for today/tomorrow to prevent duplicates
+  // Clear existing picks for today/tomorrow to prevent duplicates e improve performance
   await prisma.tennisPick.deleteMany({
     where: { match: { date: dateRange } }
   });
-  await prisma.tennisMatch.deleteMany({
-    where: { date: dateRange }
-  });
+  
+  // Note: We no longer delete TennisMatch here to avoid Foreign Key errors
+  // for matches that might be in flight. Upsert handles the match updates.
+
 
   let totalMatches = 0;
   let totalPicks   = 0;
@@ -651,6 +675,10 @@ export async function runDailyTennisSync(): Promise<{
 
         const surface = detectSurface(tournament, event);
         const tournamentLevel = detectTournamentLevel(tournament);
+        
+        // Optimization: Skip ITF matches for daily sync (usually low volume/reliability)
+        if (tournamentLevel === 'ITF') continue;
+        
         const round  = comp.type?.text || comp.round?.displayName || 'R32';
         const indoor = !!(comp.venue?.indoor);
         
@@ -785,29 +813,33 @@ export async function runDailyTennisSync(): Promise<{
   let bestPickEV = -Infinity;
 
   for (const { pick, matchId } of top30Picks) {
-    const saved = await prisma.tennisPick.create({
-      data: {
-        matchId:        matchId,
-        market:         pick.market,
-        selection:      pick.selection,
-        description:    pick.description,
-        odds:           pick.odds,
-        trueOdds:       pick.trueOdds,
-        estimatedProb:  pick.estimatedProb,
-        expectedValue:  pick.expectedValue,
-        confidenceScore:pick.confidenceScore,
-        valueLabel:     pick.valueLabel,
-        isPremiumPick:  false,
-        explanation:    pick.explanation,
-        statsBreakdown: pick.statsBreakdown,
+    try {
+      const saved = await prisma.tennisPick.create({
+        data: {
+          matchId:        matchId,
+          market:         pick.market,
+          selection:      pick.selection,
+          description:    pick.description,
+          odds:           pick.odds,
+          trueOdds:       pick.trueOdds,
+          estimatedProb:  pick.estimatedProb,
+          expectedValue:  pick.expectedValue,
+          confidenceScore:pick.confidenceScore,
+          valueLabel:     pick.valueLabel,
+          isPremiumPick:  false,
+          explanation:    pick.explanation,
+          statsBreakdown: pick.statsBreakdown,
+        }
+      });
+
+      totalPicks++;
+
+      if (pick.expectedValue > bestPickEV) {
+        bestPickEV = pick.expectedValue;
+        bestPickId = saved.id;
       }
-    });
-
-    totalPicks++;
-
-    if (pick.expectedValue > bestPickEV) {
-      bestPickEV = pick.expectedValue;
-      bestPickId = saved.id;
+    } catch (err) {
+      console.error(`❌ Failed to save pick for match ${matchId}:`, err);
     }
   }
 

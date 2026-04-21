@@ -1,33 +1,25 @@
-
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function check() {
-  const matches = await prisma.footballMatch.count();
-  const picks = await prisma.footballPick.count();
-  console.log(`Total Football Matches: ${matches}`);
-  console.log(`Total Football Picks: ${picks}`);
-  
-  const today = new Date();
-  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const mxOffset = -6 * 60 * 60 * 1000;
+  const now = new Date();
+  const mxNow = new Date(now.getTime() + mxOffset);
+  const mxTodayStart = new Date(Date.UTC(mxNow.getUTCFullYear(), mxNow.getUTCMonth(), mxNow.getUTCDate()));
+  const start = new Date(mxTodayStart.getTime() - mxOffset);
   const end = new Date(start.getTime() + 86400000);
-  
-  const todayMatches = await prisma.footballMatch.findMany({
-    where: { date: { gte: start, lt: end } },
-    include: { picks: true }
+
+  console.log('Checking picks for range:', start.toISOString(), 'to', end.toISOString());
+
+  const picks = await prisma.footballPick.findMany({
+    where: { match: { date: { gte: start, lt: end } } },
+    include: { match: true }
   });
-  
-  console.log(`Matches for today (${start.toISOString().split('T')[0]}): ${todayMatches.length}`);
-  if (todayMatches.length > 0) {
-    console.log('Match names:', todayMatches.map(m => `${m.homeTeam} vs ${m.awayTeam}`).join(', '));
-  }
-  
-  const tomorrowStart = new Date(start.getTime() + 86400000);
-  const tomorrowEnd = new Date(tomorrowStart.getTime() + 86400000);
-  const tomorrowMatches = await prisma.footballMatch.findMany({
-    where: { date: { gte: tomorrowStart, lt: tomorrowEnd } }
+
+  console.log(`Found ${picks.length} football picks.`);
+  picks.slice(0, 5).forEach(p => {
+    console.log(`- [${p.match.homeTeam} vs ${p.match.awayTeam}] ${p.market}: ${p.selection} (@${p.odds}) - ${p.description}`);
   });
-  console.log(`Matches for tomorrow: ${tomorrowMatches.length}`);
 }
 
-check().finally(() => prisma.$disconnect());
+check().catch(console.error);

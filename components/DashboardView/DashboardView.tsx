@@ -14,17 +14,26 @@ type SportFilter = 'tennis' | 'football' | 'basketball' | 'baseball';
 type SortFilter = 'relevance' | 'time';
 
 function getMEXDateWindow(day: DayFilter) {
-  const mxOffset = -6 * 60 * 60 * 1000;
-  const now = new Date();
-  
-  // Calculate the start of the current day in Mexico
-  const mxNow = new Date(now.getTime() + mxOffset);
-  const mxTodayStart = new Date(Date.UTC(mxNow.getUTCFullYear(), mxNow.getUTCMonth(), mxNow.getUTCDate()));
-  
-  // Shift back to UTC for Prisma comparison
-  const start = new Date(mxTodayStart.getTime() - mxOffset + (day === 'tomorrow' ? 86400000 : 0));
-  const end = new Date(start.getTime() + 86400000);
-  
+  // Mexico City is UTC-6 (CST) — we determine the current local date there
+  const MX_OFFSET_MS = 6 * 60 * 60 * 1000; // 6h ahead of UTC
+  const nowUTC = Date.now();
+  // What is the "local" Mexico midnight in UTC?
+  const mxMidnightUTC = nowUTC - (nowUTC % 86400000) - ((nowUTC % 86400000) < MX_OFFSET_MS ? 86400000: 0) + MX_OFFSET_MS;
+
+  // Simpler & correct approach: derive MX "today" date string
+  const mxNowDate = new Date(nowUTC - MX_OFFSET_MS);
+  const y = mxNowDate.getUTCFullYear();
+  const m = mxNowDate.getUTCMonth();
+  const d = mxNowDate.getUTCDate();
+
+  // Start of today/tomorrow in UTC (Mexico midnight = UTC+6)
+  const startLocal = new Date(Date.UTC(y, m, d + (day === 'tomorrow' ? 1 : 0)));
+  const endLocal   = new Date(startLocal.getTime() + 86400000);
+
+  // Convert local midnight back to UTC for DB queries
+  const start = new Date(startLocal.getTime() + MX_OFFSET_MS);
+  const end   = new Date(endLocal.getTime()   + MX_OFFSET_MS);
+
   return { start, end };
 }
 
@@ -90,34 +99,33 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
     
   const lastSync = isMainSport ? await getLastSyncLog(sport) : null;
   
-  const todayStr = new Intl.DateTimeFormat('en-CA', {
+  // Generate date strings in Mexico City timezone (UTC-6)
+  const mxFmt = (offsetDays: number) => new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Mexico_City',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).format(new Date()).replace(/-/g, '');
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date(Date.now() + offsetDays * 86400000)).replace(/-/g, '');
 
-  const tomorrowStr = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Mexico_City',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).format(new Date(Date.now() + 86400000)).replace(/-/g, '');
+  const todayStr    = mxFmt(0);
+  const tomorrowStr = mxFmt(1);
 
   const usTodayPicks = sport === 'basketball' ? await getBasketballPicks(todayStr)
-                   : sport === 'baseball' ? await getBaseballPicks(todayStr)
-                   : [];
-  
+                     : sport === 'baseball'    ? await getBaseballPicks(todayStr)
+                     : [];
+
   const usTomPicks = sport === 'basketball' ? await getBasketballPicks(tomorrowStr)
-                   : sport === 'baseball' ? await getBaseballPicks(tomorrowStr)
+                   : sport === 'baseball'    ? await getBaseballPicks(tomorrowStr)
                    : [];
 
   const parlays = [];
   if (sport === 'tennis') {
-    const list = generateParlays(matches, []).filter(p => !p.picks.some((pk:any) => pk.sport === 'football'));
+    // Only use today/tomorrow matches (not cross-day contamination)
+    const filtered = matches.filter((m: any) => m.picks?.length > 0);
+    const list = generateParlays(filtered, []).filter(p => !p.picks.some((pk:any) => pk.sport === 'football'));
     if (list[0]) parlays.push(list[0]);
   } else if (sport === 'football') {
-    const list = generateParlays([], matches).filter(p => !p.picks.some((pk:any) => pk.sport === 'tennis'));
+    // Filter to ONLY today's matches for today's solid picks (not future days)
+    const dayMatches = matches.filter((m: any) => m.picks?.length > 0);
+    const list = generateParlays([], dayMatches).filter(p => !p.picks.some((pk:any) => pk.sport === 'tennis'));
     if (list[0]) parlays.push(list[0]);
   } else if (sport === 'basketball') {
     const p = await getBasketballParlay(day === 'today' ? todayStr : tomorrowStr);

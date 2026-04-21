@@ -143,7 +143,7 @@ export default async function LandingPage() {
           <div className={styles.cardEmoji}>🏀</div>
           <div className={styles.cardContent}>
             <h2 className={styles.cardTitle}>Panel NBA</h2>
-            <p className={styles.cardDesc}>Picks Individuales y Parlay</p>
+            <p className={styles.cardDesc}>Picks y análisis completo</p>
             <div className={styles.cardPreview}>
               Análisis completo hoy y mañana
             </div>
@@ -155,7 +155,7 @@ export default async function LandingPage() {
           <div className={styles.cardEmoji}>⚾</div>
           <div className={styles.cardContent}>
             <h2 className={styles.cardTitle}>Panel MLB</h2>
-            <p className={styles.cardDesc}>Picks Individuales y Parlay</p>
+            <p className={styles.cardDesc}>Picks y análisis completo</p>
             <div className={styles.cardPreview}>
               Análisis completo hoy y mañana
             </div>
