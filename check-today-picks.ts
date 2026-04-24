@@ -1,38 +1,19 @@
-import prisma from './lib/prisma';
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
-async function main() {
-  const mxFmt = (offsetDays: number) => new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Mexico_City',
-    year: 'numeric', month: '2-digit', day: '2-digit'
-  }).format(new Date(Date.now() + offsetDays * 86400000)).replace(/-/g, '');
-
-  const todayStr = mxFmt(0);
-  console.log(`🔍 Checking picks for TODAY (${todayStr}) in Turso DB...`);
-  
+async function checkPicks() {
   const matches = await prisma.footballMatch.findMany({
-    where: { 
-      date: {
-        gte: new Date(new Date().setHours(0,0,0,0) - 24*3600*1000), // very broad
-        lt: new Date(new Date().setHours(0,0,0,0) + 48*3600*1000)
-      }
-    },
-    include: { picks: true },
-    orderBy: { date: 'asc' }
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+    include: { picks: true }
   });
 
-  console.log(`Found ${matches.length} matches in the next 24h window.`);
-  
-  matches.forEach((m, i) => {
-    console.log(`Match: ${m.homeTeam} vs ${m.awayTeam} (${m.date.toISOString()})`);
-    m.picks.forEach(p => {
-      console.log(`  - ${p.description} (@${p.odds})`);
-    });
-  });
-
-  process.exit(0);
+  for (const m of matches) {
+     console.log(`Match: ${m.homeTeam} vs ${m.awayTeam}`);
+     for (const p of m.picks) {
+         console.log(`  - ${p.market} / ${p.selection} (${p.estimatedProb})`);
+     }
+  }
 }
 
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+checkPicks().finally(() => prisma.$disconnect());

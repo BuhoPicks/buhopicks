@@ -1,27 +1,36 @@
-import prisma from './lib/prisma';
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
-async function main() {
-  console.log('🔍 Inspecting production football picks in Turso DB...');
+async function checkPicks() {
+  const matches = await prisma.footballMatch.findMany({
+    include: { picks: true }
+  });
+
+  console.log(`Total football matches in DB: ${matches.length}`);
   
-  const picks = await prisma.footballPick.findMany({
-    take: 10,
-    include: { match: true },
-    orderBy: { createdAt: 'desc' }
-  });
+  if (matches.length > 0) {
+    const dates = {};
+    matches.forEach(m => {
+        const d = m.date.toISOString().split('T')[0];
+        dates[d] = (dates[d] || 0) + 1;
+    });
+    console.log("Matches by date:", dates);
 
-  console.log('Recent 10 picks:');
-  picks.forEach((p, i) => {
-    console.log(`[${i+1}] Match: ${p.match.homeTeam} vs ${p.match.awayTeam} (${p.match.date.toISOString()})`);
-    console.log(`    Market: ${p.market}`);
-    console.log(`    Selection: ${p.selection}`);
-    console.log(`    Description: ${p.description}`);
-    console.log(`    isPremium: ${p.isPremiumPick}`);
-  });
-
-  process.exit(0);
+    const allPicks = matches.flatMap(m => m.picks);
+    console.log(`Total picks: ${allPicks.length}`);
+    const summary = {};
+    allPicks.forEach(p => {
+        if (!summary[p.market]) summary[p.market] = new Set();
+        summary[p.market].add(p.selection);
+    });
+    console.log("Unique Markets and selections:");
+    for (const [m, s] of Object.entries(summary)) {
+        console.log(`- ${m}: ${Array.from(s).join(', ')}`);
+    }
+  }
 }
 
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+process.env.DATABASE_URL = "libsql://buho-picks-buhopicks.aws-us-east-2.turso.io";
+process.env.TURSO_AUTH_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzYxNDY2MDIsImlkIjoiMDE5ZDhhOTUtODYwMS03MDAzLTgzNjYtZDg3Njk5Mjk2MWE0IiwicmlkIjoiYTAzZDE0OTEtNDAzZi00MGFhLTg4MDMtYmQ0ZGRlOTNmN2NiIn0.-hb9GFVs18_Eml9xJYUi8gDRAdAFg0lvED5fbHj4wwtoN0p5XvHnn8t72VN_2BQhtuFNLG6sl0ehiVo0AGSUAg";
+
+checkPicks().finally(() => prisma.$disconnect());

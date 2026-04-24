@@ -38,7 +38,7 @@ export default function FootyStatsSection({ matches }: FootyStatsSectionProps) {
     <section className={styles.container}>
       <div className={styles.header}>
         <h2 className={styles.title}>
-          <span className={styles.icon}>📊</span> FootyStats: Tendencias del Día
+          <span className={styles.icon}>📊</span> Tendencias del Día
         </h2>
         <p className={styles.subtitle}>Las mejores previsiones estadísticas (Corners, Goles, BTTS) extraídas automáticamente.</p>
       </div>
@@ -85,7 +85,7 @@ export default function FootyStatsSection({ matches }: FootyStatsSectionProps) {
         {/* FAVORITES COLUMN */}
         <div className={styles.trendCol}>
           <div className={styles.colHeader}>
-            <span className={styles.colIcon}>🏆</span> Ganadores Seguros
+            <span className={styles.colIcon}>🏆</span> Mayor probabilidad de ganar
           </div>
           <div className={styles.colList}>
             {topFavorites.length > 0 ? topFavorites.map((pick, i) => (
