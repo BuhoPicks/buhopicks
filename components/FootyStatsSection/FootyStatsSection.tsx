@@ -18,19 +18,19 @@ export default function FootyStatsSection({ matches }: FootyStatsSectionProps) {
 
   // OVER 2.5 TRENDS
   const topOvers = allPicksWithMatch
-    .filter(p => p.market === 'OVER_UNDER' && p.selection?.includes('Over'))
+    .filter(p => p.market === 'Goles' && p.selection?.includes('Más de'))
     .sort((a, b) => b.estimatedProb - a.estimatedProb)
     .slice(0, 3);
 
   // BTTS TRENDS (Both Teams To Score)
   const topBTTS = allPicksWithMatch
-    .filter(p => p.market === 'BTTS' && p.selection === 'Yes')
+    .filter(p => p.market === 'Ambos Anotan' && p.selection === 'Sí')
     .sort((a, b) => b.estimatedProb - a.estimatedProb)
     .slice(0, 3);
 
   // STRONGEST FAVORITES
   const topFavorites = allPicksWithMatch
-    .filter(p => p.market === '1X2' && p.estimatedProb > 0.65)
+    .filter(p => p.market === 'Ganador' && p.estimatedProb >= 0.60)
     .sort((a, b) => b.estimatedProb - a.estimatedProb)
     .slice(0, 3);
 
