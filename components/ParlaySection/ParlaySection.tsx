@@ -39,21 +39,25 @@ export default function ParlaySection({ parlays, day = 'today' }: ParlaySectionP
             </div>
 
             <div className={styles.picksList}>
-              {parlay.picks.map((pick, i) => (
-                <div key={i} className={styles.pickItem}>
-                  <div className={styles.pickMatch}>
-                    <span className={styles.sportIcon}>{pick.icon || (pick.sport === 'tennis' ? '🎾' : pick.sport === 'basketball' ? '🏀' : pick.sport === 'baseball' ? '⚾' : '⚽')}</span>
-                    {pick.sport === 'basketball' || pick.sport === 'baseball' || pick.sport === 'tennis' 
-                      ? `${pick.match.player1Name} vs ${pick.match.player2Name}` 
-                      : `${pick.match.homeTeam} vs ${pick.match.awayTeam}`
-                    }
+              {parlay.picks.map((pick, i) => {
+                const isBestPick = parlay.type === 'solid' && i === 0;
+                return (
+                  <div key={i} className={`${styles.pickItem} ${isBestPick ? styles.bestPickHighlight : ''}`}>
+                    <div className={styles.pickMatch}>
+                      <span className={styles.sportIcon}>{pick.icon || (pick.sport === 'tennis' ? '🎾' : pick.sport === 'basketball' ? '🏀' : pick.sport === 'baseball' ? '⚾' : '⚽')}</span>
+                      {pick.sport === 'basketball' || pick.sport === 'baseball' || pick.sport === 'tennis' 
+                        ? `${pick.match.player1Name} vs ${pick.match.player2Name}` 
+                        : `${pick.match.homeTeam} vs ${pick.match.awayTeam}`
+                      }
+                      {isBestPick && <span className={styles.bestPickBadge}>🌟 MEJOR PICK</span>}
+                    </div>
+                    <div className={styles.pickSelection}>
+                      <span className={`${styles.selectionName} ${isBestPick ? styles.bestPickText : ''}`}>{pick.description}</span>
+                      <span className={styles.selectionOdds}>@{pick.odds.toFixed(2)}</span>
+                    </div>
                   </div>
-                  <div className={styles.pickSelection}>
-                    <span className={styles.selectionName}>{pick.description}</span>
-                    <span className={styles.selectionOdds}>@{pick.odds.toFixed(2)}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className={styles.cardFooter}>

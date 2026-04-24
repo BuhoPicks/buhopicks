@@ -3,6 +3,7 @@ import Link from 'next/link';
 import TennisMatchCard from '@/components/TennisMatchCard/TennisMatchCard';
 import FootballMatchCard from '@/components/FootballMatchCard/FootballMatchCard';
 import ParlaySection from '@/components/ParlaySection/ParlaySection';
+import FootyStatsSection from '@/components/FootyStatsSection/FootyStatsSection';
 import ResultsChart from '@/components/ResultsChart/ResultsChart';
 import { generateParlays } from '@/lib/parlayEngine';
 import { getBasketballParlay, getBaseballParlay, getBasketballPicks, getBaseballPicks } from '@/lib/usSportsEngine';
@@ -240,6 +241,8 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
 
       {parlays.length > 0 && <ParlaySection parlays={parlays} day={day} />}
       
+      {sport === 'football' && matches.length > 0 && <FootyStatsSection matches={matches} />}
+
       {(isMainSport ? matches.length > 0 : (day === 'today' ? usTodayPicks.length > 0 : usTomPicks.length > 0)) && (
         <div className={`${styles.statsBar} ${styles['statsBar' + sport.charAt(0).toUpperCase() + sport.slice(1)]} animate-in`}>
 

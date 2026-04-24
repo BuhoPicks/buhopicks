@@ -426,7 +426,7 @@ export async function runDailyFootballSync() {
         // Score all candidates
         const scored = candidates
           .map((c, idx) => ({ ...scorePick(c, seed, idx), candidate: c }))
-          .filter(p => p.estimatedProb >= 0.42) // include if prob ≥ 42%
+          .filter(p => p.estimatedProb >= 0.55) // Only picks with 55%+ probability
           .sort((a, b) => b.qualityScore - a.qualityScore);
 
         // ═══ MARKET DIVERSITY: pick best from different categories ═══
@@ -469,6 +469,9 @@ export async function runDailyFootballSync() {
           }
         });
 
+        // Clear existing picks for this match to avoid duplicates/stale data
+        await prisma.footballPick.deleteMany({ where: { matchId: match.id } });
+
         totalMatches++;
 
         for (const p of bestPicks) {
@@ -499,22 +502,24 @@ export async function runDailyFootballSync() {
       }
     }
 
-    // Mark one PREMIUM pick per day (the best one for that calendar day)
+    // Mark top 3 picks per day as PREMIUM (more candidates for solid picks section)
     let premiumPicksTotal = 0;
     for (const [day, picks] of Object.entries(picksByDay)) {
       if (picks.length === 0) continue;
       picks.sort((a, b) => b.ev - a.ev);
-      const topId = picks[0].id;
-      await prisma.footballPick.update({
-        where: { id: topId },
-        data: {
-          isPremiumPick: true,
-          valueLabel: 'PREMIUM',
-          explanation: `🌟 PICK PREMIUM DEL DÍA (${day}): Este pick tiene el mayor valor estadístico entre todos los partidos de hoy. Su probabilidad de acierto es la más alta del análisis diario.`,
-        }
-      });
-      console.log(`⭐ Marked premium pick for ${day}: ${topId}`);
-      premiumPicksTotal++;
+      // Mark top 3 (or all if fewer)
+      const toMark = picks.slice(0, Math.min(3, picks.length));
+      for (const { id } of toMark) {
+        await prisma.footballPick.update({
+          where: { id },
+          data: {
+            isPremiumPick: true,
+            valueLabel: 'PREMIUM',
+          }
+        });
+        premiumPicksTotal++;
+      }
+      console.log(`⭐ Marked ${toMark.length} premium picks for ${day}`);
     }
 
     // Clean up orphan matches (no picks)

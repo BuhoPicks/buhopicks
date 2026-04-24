@@ -35,14 +35,14 @@ async function fetchMoneylinePicks(url: string, sportName: string, icon: string)
   const data  = await fetchESPN(url);
   const picks: any[] = [];
 
-  for (const ev of (data.events || [])) {
-    if (!ev.competitions?.length) continue;
+  for (const eventModel of (data.events || [])) {
+    if (!eventModel.competitions?.length) continue;
 
-    const state = ev.status?.type?.state;
+    const state = eventModel.status?.type?.state;
     // Skip already finished games
     if (state === 'post') continue;
 
-    const comp = ev.competitions[0];
+    const comp = eventModel.competitions[0];
     const c1   = comp.competitors?.[0];
     const c2   = comp.competitors?.[1];
     if (!c1 || !c2) continue;
@@ -69,8 +69,16 @@ async function fetchMoneylinePicks(url: string, sportName: string, icon: string)
     const dogPct = Math.min(c1Pct, c2Pct);
     const isHome = fav.homeAway === 'home';
 
-    const prob = Math.min(0.83, 0.50 + edge * 0.48 + (isHome ? 0.03 : 0));
+    // Probability model: blend record-based win% with home advantage
+    // Require a meaningful edge (favPct >= 0.52) before recommending the pick
+    const prob = Math.min(0.82, 0.50 + edge * 0.45 + (isHome ? 0.04 : 0));
     const conf = Math.round(prob * 100);
+    // Simulate fair market odds with ~5% vig
+    const fairOdds  = 1 / prob;
+    const mktOdds   = parseFloat(Math.max(1.20, Math.min(2.50, fairOdds * 0.955)).toFixed(2));
+    const ev        = prob * mktOdds - 1;
+    // Only emit a pick when our model has a real edge
+    if (prob < 0.56 || edge < 0.06) continue;
 
     const sportLabel = sportName === 'basketball' ? 'NBA' : 'MLB';
     let explanation  = `${fav.team?.displayName ?? '?'} (${favRec}) llega como favorito frente a ${dog.team?.displayName ?? '?'} (${dogRec}). `;
@@ -96,16 +104,16 @@ async function fetchMoneylinePicks(url: string, sportName: string, icon: string)
     picks.push({
       sport:  sportName,
       icon,
-      gameId: ev.id,
+      gameId: eventModel.id,
       match:  {
         player1Name: c2.team?.displayName ?? 'Visitante',
         player2Name: c1.team?.displayName ?? 'Local',
       },
       description:    `Gana ${fav.team?.displayName ?? 'Favorito'} (Moneyline)`,
-      odds:           parseFloat((1 / prob * 1.04).toFixed(2)),
+      odds:           mktOdds,
       estimatedProb:  parseFloat(prob.toFixed(3)),
       confidenceScore: conf,
-      expectedValue:  parseFloat((prob * (1 / prob * 1.04) - 1).toFixed(4)),
+      expectedValue:  parseFloat(ev.toFixed(4)),
       explanation,
       statsBreakdown: JSON.stringify({
         favRecord: favRec, dogRecord: dogRec,
@@ -341,9 +349,13 @@ export async function getBasketballParlay(dateStr: string): Promise<Parlay | nul
     const allPicks = [...ml, ...props];
     if (allPicks.length < 2) return null;
 
-    // Only solid: confidence ≥ 60
+    // Solid picks: prob >= 0.60 AND odds in sensible range to avoid junk
     const solid = allPicks
-      .filter(p => p.confidenceScore >= 60)
+      .filter(p => {
+        const prob = p.estimatedProb ?? (p.confidenceScore / 100);
+        const odds = p.odds ?? 1.5;
+        return prob >= 0.60 && odds >= 1.20 && odds <= 2.50;
+      })
       .sort((a, b) => b.confidenceScore - a.confidenceScore);
 
     // Deduplicate by gameId so we don't double-dip on the same game
@@ -377,8 +389,13 @@ export async function getBaseballParlay(dateStr: string): Promise<Parlay | null>
     const allPicks = [...ml, ...props];
     if (allPicks.length < 2) return null;
 
+    // Solid picks: prob >= 0.60 AND odds in sensible range
     const solid = allPicks
-      .filter(p => p.confidenceScore >= 58)
+      .filter(p => {
+        const prob = p.estimatedProb ?? (p.confidenceScore / 100);
+        const odds = p.odds ?? 1.5;
+        return prob >= 0.60 && odds >= 1.20 && odds <= 2.50;
+      })
       .sort((a, b) => b.confidenceScore - a.confidenceScore);
 
     const seenGames = new Set<string>();

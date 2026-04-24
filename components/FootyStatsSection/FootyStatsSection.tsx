@@ -12,20 +12,25 @@ export default function FootyStatsSection({ matches }: FootyStatsSectionProps) {
   // Ideally, this hooks up to footystats API, but here we derive "Top Trends"
   
   // OVER 2.5 TRENDS
-  const topOvers = [...matches]
-    .flatMap(m => m.picks.filter((p: any) => p.market === 'OVER_UNDER' && p.selection.includes('Over')))
+  const allPicksWithMatch = [...matches].flatMap(m => 
+    m.picks.map((p: any) => ({ ...p, parentMatch: m }))
+  );
+
+  // OVER 2.5 TRENDS
+  const topOvers = allPicksWithMatch
+    .filter(p => p.market === 'OVER_UNDER' && p.selection?.includes('Over'))
     .sort((a, b) => b.estimatedProb - a.estimatedProb)
     .slice(0, 3);
 
   // BTTS TRENDS (Both Teams To Score)
-  const topBTTS = [...matches]
-    .flatMap(m => m.picks.filter((p: any) => p.market === 'BTTS' && p.selection === 'Yes'))
+  const topBTTS = allPicksWithMatch
+    .filter(p => p.market === 'BTTS' && p.selection === 'Yes')
     .sort((a, b) => b.estimatedProb - a.estimatedProb)
     .slice(0, 3);
 
   // STRONGEST FAVORITES
-  const topFavorites = [...matches]
-    .flatMap(m => m.picks.filter((p: any) => p.market === '1X2' && p.estimatedProb > 0.65))
+  const topFavorites = allPicksWithMatch
+    .filter(p => p.market === '1X2' && p.estimatedProb > 0.65)
     .sort((a, b) => b.estimatedProb - a.estimatedProb)
     .slice(0, 3);
 

@@ -5,15 +5,15 @@ import { runDailyFootballSync } from './footballEngine';
 /**
  * BH Analysis — Background Scheduler
  *
- * Improvements:
- * - Checks last sync time before running on startup (avoids duplicate sync after restart)
- * - Also syncs US Sports (NBA/MLB) via external API on each cycle
- * - Runs at 00:01, 08:01, 16:01 Mexico City time
+ * Strategy:
+ * - Syncs ONCE per day at 00:01 Mexico City time (midnight rollover)
+ * - Fetches picks for the full 24 hours ahead so they are visible all day
+ * - On server restart, skips sync if one was already done in the last 20 hours
  * - Guards against concurrent execution with isRunning flag
  */
 
-const SYNC_HOURS    = [0, 8, 16]; // Run at 00:01, 08:01, 16:01 MX time
-const MIN_SYNC_GAP  = 3 * 60 * 60 * 1000; // 3h minimum between syncs (safety)
+const SYNC_HOUR     = 0;                          // Run at 00:01 MX time (midnight)
+const MIN_SYNC_GAP  = 20 * 60 * 60 * 1000;       // 20h guard — don't re-sync if already done today
 
 let isRunning = false;
 
@@ -21,23 +21,16 @@ function getNextSyncTime(): Date {
   const now = new Date();
   const mxNow = new Date(now.getTime() - 6 * 60 * 60 * 1000); // UTC-6
 
-  const possibleTargets = SYNC_HOURS.map(h => {
-    const d = new Date(mxNow);
-    d.setUTCHours(h + 6, 1, 0, 0); // Convert MX hour to UTC
-    return d;
-  });
+  // Target: midnight+1min of MX time → SYNC_HOUR:01 MX = (SYNC_HOUR+6):01 UTC
+  const todayTarget = new Date(mxNow);
+  todayTarget.setUTCHours(SYNC_HOUR + 6, 1, 0, 0); // today at 00:01 MX in UTC
 
-  // Find the next target that is in the future (with 60s buffer)
-  let next = possibleTargets.find(t => t.getTime() > Date.now() + 60000);
-
-  // If none found for today, take the first one of tomorrow
-  if (!next) {
-    next = new Date(mxNow);
-    next.setUTCDate(next.getUTCDate() + 1);
-    next.setUTCHours(SYNC_HOURS[0] + 6, 1, 0, 0);
+  // If today's window already passed (with 60s buffer), schedule for tomorrow
+  if (todayTarget.getTime() <= Date.now() + 60000) {
+    todayTarget.setUTCDate(todayTarget.getUTCDate() + 1);
   }
 
-  return next;
+  return todayTarget;
 }
 
 /**
@@ -62,7 +55,7 @@ export function initScheduler() {
     (global as any)._schedulerStarted = true;
   }
 
-  console.log('⏰ BH Analysis Scheduler initialized (3× daily cycle).');
+  console.log('⏰ BH Analysis Scheduler initialized (once-daily at midnight MX).');
 
   const runSync = async (isStartup = false) => {
     if (isRunning) {
@@ -72,7 +65,7 @@ export function initScheduler() {
     isRunning = true;
 
     try {
-      // On startup, skip if we synced recently to avoid hammering APIs after a restart
+      // On startup, skip if we already synced today (within last 20h) to avoid hammering APIs
       if (isStartup) {
         const [tennisRecent, footballRecent] = await Promise.all([
           wasRecentlySynced('TENNIS'),
@@ -80,7 +73,7 @@ export function initScheduler() {
         ]);
 
         if (tennisRecent && footballRecent) {
-          console.log('ℹ️ Startup sync skipped — recent sync found (< 3h ago).');
+          console.log('ℹ️ Startup sync skipped — daily sync already done (< 20h ago). Picks are fresh for today.');
           scheduleNext();
           isRunning = false;
           return;
@@ -97,7 +90,7 @@ export function initScheduler() {
       const tennisOk   = tennisResult.status === 'fulfilled' ? tennisResult.value.success : false;
       const footballOk = footballResult.status === 'fulfilled' ? footballResult.value.success : false;
 
-      console.log(`✅ Sync complete — Tennis: ${tennisOk ? 'OK' : 'FAIL'}, Football: ${footballOk ? 'OK' : 'FAIL'}`);
+      console.log(`✅ Daily sync complete — Tennis: ${tennisOk ? 'OK' : 'FAIL'}, Football: ${footballOk ? 'OK' : 'FAIL'}. Picks locked for the next 24 hours.`);
     } catch (error) {
       console.error('❌ Scheduled sync failed:', error);
     } finally {

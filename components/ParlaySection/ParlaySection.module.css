@@ -154,6 +154,28 @@
   color: var(--brand);
 }
 
+.bestPickHighlight {
+  background: rgba(245, 158, 11, 0.08); /* slight gold tint */
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.bestPickBadge {
+  font-size: 0.65rem;
+  color: #F59E0B;
+  background: rgba(245, 158, 11, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 900;
+  margin-left: auto; /* Push to right */
+}
+
+.bestPickText {
+  color: #FCD34D !important;
+  font-weight: 800;
+}
+
 .cardFooter {
   margin-top: auto;
   padding-top: 1rem;

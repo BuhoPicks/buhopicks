@@ -556,7 +556,7 @@ function generatePicks(
 
 function filterAndRankPicks(picks: GeneratedPick[], minEV = 0.0): GeneratedPick[] {
   return picks
-    .filter(p => p.expectedValue >= minEV && p.confidenceScore >= 52)
+    .filter(p => p.expectedValue >= minEV && p.confidenceScore >= 56)
     .sort((a, b) => b.expectedValue - a.expectedValue);
 }
 
@@ -738,7 +738,7 @@ export async function runDailyTennisSync(): Promise<{
 
         // Generate and filter picks
         const rawPicks   = generatePicks(p1, p2, analysis, surface, circuit);
-        const goodPicks  = filterAndRankPicks(rawPicks, -0.12); // Be more inclusive when volume is low
+        const goodPicks  = filterAndRankPicks(rawPicks, 0.0); // Only keep picks with non-negative EV
 
         // FILTER: Keep only ATP/WTA/Challenger and high-level ITF if needed. No doubles.
         const isDoubleMatch = p1.name.includes('/') || p2.name.includes('/') || tournament.toLowerCase().includes('doubles');
