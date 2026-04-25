@@ -50,7 +50,11 @@ export async function GET(req: NextRequest) {
       const data = await getBasketballParlay(dateStr);
       return NextResponse.json({
         message: 'NBA data verified (real-time)',
-        picksFound: data ? data.picks.length : 0,
+        result: {
+          message: 'NBA data verified (real-time)',
+          picksGenerated: data ? data.picks.length : 0,
+          matchesFound: data ? data.picks.length : 0,
+        },
         durationMs: Date.now() - start,
       });
 
@@ -64,7 +68,11 @@ export async function GET(req: NextRequest) {
       const data = await getBaseballParlay(dateStr);
       return NextResponse.json({
         message: 'MLB data verified (real-time)',
-        picksFound: data ? data.picks.length : 0,
+        result: {
+          message: 'MLB data verified (real-time)',
+          picksGenerated: data ? data.picks.length : 0,
+          matchesFound: data ? data.picks.length : 0,
+        },
         durationMs: Date.now() - start,
       });
 

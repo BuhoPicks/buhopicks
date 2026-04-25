@@ -349,12 +349,12 @@ export async function getBasketballParlay(dateStr: string): Promise<Parlay | nul
     const allPicks = [...ml, ...props];
     if (allPicks.length < 2) return null;
 
-    // Solid picks: prob >= 0.60 AND odds in sensible range to avoid junk
+    // Solid picks: prob >= 0.57 AND odds in sensible range to avoid junk
     const solid = allPicks
       .filter(p => {
         const prob = p.estimatedProb ?? (p.confidenceScore / 100);
         const odds = p.odds ?? 1.5;
-        return prob >= 0.60 && odds >= 1.20 && odds <= 2.50;
+        return prob >= 0.57 && odds >= 1.20 && odds <= 2.50;
       })
       .sort((a, b) => b.confidenceScore - a.confidenceScore);
 
@@ -389,12 +389,12 @@ export async function getBaseballParlay(dateStr: string): Promise<Parlay | null>
     const allPicks = [...ml, ...props];
     if (allPicks.length < 2) return null;
 
-    // Solid picks: prob >= 0.60 AND odds in sensible range
+    // Solid picks: prob >= 0.57 AND odds in sensible range
     const solid = allPicks
       .filter(p => {
         const prob = p.estimatedProb ?? (p.confidenceScore / 100);
         const odds = p.odds ?? 1.5;
-        return prob >= 0.60 && odds >= 1.20 && odds <= 2.50;
+        return prob >= 0.57 && odds >= 1.20 && odds <= 2.50;
       })
       .sort((a, b) => b.confidenceScore - a.confidenceScore);
 
