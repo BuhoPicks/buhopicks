@@ -49,7 +49,7 @@ function computeSolidScore(pick: any): number {
   // More reliable markets score higher
   const reliableMarkets = ['MATCH_WINNER', 'GANADOR', '1X2', 'MONEYLINE', 'GOLES', 'GOALS',
                             'BTTS', 'AMBOS_ANOTAN', 'GAMES_OVER_UNDER', 'DOUBLE_CHANCE',
-                            'DOBLE_OPORTUNIDAD', 'FIRST_SET_WINNER', 'TOTAL_SETS'];
+                            'DOBLE_OPORTUNIDAD', 'FIRST_SET_WINNER'];
   const isReliable = reliableMarkets.some(m => market.includes(m));
   const marketScore = isReliable ? 15 : 5;
 
@@ -99,8 +99,8 @@ function selectBestPicks(allPicks: any[], maxPicks = 4): any[] {
     selected.push(pick);
   }
 
-  // Fallback: if we couldn't fill 4 with diversity constraints, relax sport limit
-  if (selected.length < 2) {
+  // Fallback: if we couldn't fill maxPicks with diversity constraints, relax sport limit
+  if (selected.length < maxPicks) {
     const fallback = scored
       .map(s => s.pick)
       .filter(p => {
@@ -109,6 +109,8 @@ function selectBestPicks(allPicks: any[], maxPicks = 4): any[] {
       });
     for (const p of fallback) {
       if (selected.length >= maxPicks) break;
+      const matchId = p.matchId ?? p.gameId ?? p.match?.id ?? `${p.sport}-${p.description}`;
+      usedMatchIds.add(matchId);
       selected.push(p);
     }
   }

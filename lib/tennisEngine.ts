@@ -523,7 +523,7 @@ function generatePicks(
     picks.push({
       market: 'TOTAL_SETS',
       selection: bestSetMarket.sel,
-      description: `El partido se juega en ${bestSetMarket.label}`,
+      description: `Total de Sets: ${bestSetMarket.sel} (Apuesta de sets totales, no incluye ganador)`,
       odds: Number(setsOdds.toFixed(2)),
       trueOdds: Number((1 / bestSetMarket.prob).toFixed(2)),
       estimatedProb: bestSetMarket.prob,
