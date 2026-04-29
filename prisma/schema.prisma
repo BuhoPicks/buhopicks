@@ -29,14 +29,15 @@ model Subscription {
   userId          String    @unique
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  plan            String    @default("FREE") // FREE, PREMIUM, VIP
-  status          String    @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
+  plan            String    @default("FREE") // FREE, MONTHLY, QUARTERLY, SEMIANNUAL, ANNUAL
+  status          String    @default("INACTIVE") // ACTIVE, INACTIVE, PAST_DUE, CANCELLED
   
   startDate       DateTime  @default(now())
-  endDate         DateTime? // Null for lifetime or auto-renew
+  endDate         DateTime?
   
-  stripeCustomerId String?  @unique
-  stripePriceId   String?
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
+  stripePriceId        String?
   
   updatedAt       DateTime  @updatedAt
   createdAt       DateTime  @default(now())

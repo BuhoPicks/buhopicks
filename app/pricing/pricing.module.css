@@ -1,0 +1,202 @@
+.pricingPage {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: url('/stadium-bg.png') center/cover no-repeat;
+  font-family: 'Inter', -apple-system, sans-serif;
+  overflow-y: auto;
+}
+
+.bgOverlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8,12,20,0.92) 0%, rgba(8,12,20,0.80) 50%, rgba(8,12,20,0.95) 100%);
+  backdrop-filter: blur(4px);
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+}
+
+.header { text-align: center; margin-bottom: 3rem; }
+
+.logoWrap {
+  width: 70px; height: 70px; border-radius: 50%; overflow: hidden;
+  margin: 0 auto 1rem; border: 3px solid #F59E0B;
+  box-shadow: 0 0 30px rgba(245,158,11,0.30);
+}
+.logoImg { width: 100%; height: 100%; object-fit: cover; }
+
+.title { font-size: 2.5rem; font-weight: 900; margin-bottom: 0.5rem; }
+
+.titleGradient {
+  background: linear-gradient(135deg, #60A5FA, #34D399);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+.subtitle { font-size: 1.05rem; color: #94A3B8; }
+
+.cancelledBanner {
+  margin-top: 1rem; padding: 10px 20px;
+  background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.30);
+  border-radius: 12px; color: #FBBF24; font-size: 0.9rem;
+  display: inline-block;
+}
+
+/* Plans Grid */
+.plansGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.planCard {
+  background: rgba(15, 22, 40, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.planCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,255,255,0.15);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+}
+
+.planPopular {
+  border-color: rgba(96,165,250,0.40);
+  box-shadow: 0 0 40px rgba(96,165,250,0.12);
+  transform: scale(1.03);
+}
+
+.planPopular:hover {
+  transform: scale(1.03) translateY(-4px);
+}
+
+.planBadge {
+  position: absolute;
+  top: -12px;
+  padding: 4px 16px;
+  background: linear-gradient(135deg, #2563EB, #0EA5E9);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 15px rgba(37,99,235,0.35);
+}
+
+.planName { font-size: 1.15rem; font-weight: 700; color: #F1F5F9; margin-bottom: 1rem; }
+
+.planPrice { display: flex; align-items: baseline; gap: 2px; margin-bottom: 0.5rem; }
+.currency { font-size: 1.3rem; font-weight: 700; color: #94A3B8; }
+.amount { font-size: 2.8rem; font-weight: 900; color: #F1F5F9; line-height: 1; }
+.period { font-size: 0.8rem; color: #64748B; margin-left: 4px; }
+
+.savingsBadge {
+  padding: 3px 12px;
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.30);
+  border-radius: 999px;
+  color: #4ADE80;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+}
+
+.features {
+  list-style: none;
+  width: 100%;
+  text-align: left;
+  margin: 1rem 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex: 1;
+}
+
+.features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #CBD5E1;
+  line-height: 1.3;
+}
+
+.checkIcon { color: #4ADE80; font-weight: 700; flex-shrink: 0; font-size: 0.85rem; }
+
+.selectBtn {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  color: #F1F5F9;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex; align-items: center; justify-content: center; min-height: 46px;
+}
+
+.selectBtn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(96,165,250,0.40);
+  transform: translateY(-1px);
+}
+
+.selectBtnPopular {
+  background: linear-gradient(135deg, #2563EB, #0EA5E9);
+  border-color: transparent;
+  box-shadow: 0 0 25px rgba(14,165,233,0.25);
+}
+
+.selectBtnPopular:hover:not(:disabled) {
+  box-shadow: 0 0 40px rgba(14,165,233,0.45);
+  background: linear-gradient(135deg, #2563EB, #0EA5E9);
+}
+
+.selectBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.spinner {
+  width: 20px; height: 20px;
+  border: 2.5px solid rgba(255,255,255,0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.guarantee {
+  text-align: center;
+  margin-top: 2.5rem;
+  font-size: 0.82rem;
+  color: #64748B;
+}
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+@media (max-width: 1024px) {
+  .plansGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .plansGrid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+  .planPopular { transform: none; }
+  .title { font-size: 2rem; }
+  .content { padding: 2rem 1rem 3rem; }
+}

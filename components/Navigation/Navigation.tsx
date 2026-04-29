@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 import styles from './Navigation.module.css';
 
 const navItems = [
@@ -12,11 +13,25 @@ const navItems = [
   { href: '/baseball',    icon: '⚾', label: 'MLB', title: 'Béisbol' },
   { href: '/history',     icon: '📋', label: 'Historial',  title: 'Historial de Picks' },
   { href: '/performance', icon: '📈', label: 'Rendimiento', title: 'Estadísticas' },
-  { href: '/admin',       icon: '⚙️',  label: 'Admin',      title: 'Panel de Control' },
 ];
+
+const HIDDEN_PATHS = ['/login', '/register', '/pricing'];
 
 export default function Navigation() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  // Hide navigation on auth/pricing pages
+  if (HIDDEN_PATHS.some(p => pathname.startsWith(p))) {
+    return null;
+  }
+
+  const user = session?.user as any;
+  const isAdmin = user?.role === 'ADMIN';
+
+  const allItems = isAdmin
+    ? [...navItems, { href: '/admin', icon: '⚙️', label: 'Admin', title: 'Panel de Control' }]
+    : navItems;
 
   return (
     <>
@@ -35,7 +50,7 @@ export default function Navigation() {
         <div className={styles.divider} />
 
         <ul className={styles.navList}>
-          {navItems.map(item => {
+          {allItems.map(item => {
             const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
             return (
               <li key={item.href}>
@@ -54,6 +69,19 @@ export default function Navigation() {
         </ul>
 
         <div className={styles.sidebarFooter}>
+          {user && (
+            <Link href="/account" className={styles.userCard}>
+              <div className={styles.userAvatar}>
+                {(user.name || user.email || '?')[0].toUpperCase()}
+              </div>
+              <div className={styles.userInfo}>
+                <span className={styles.userName}>{user.name || 'Usuario'}</span>
+                <span className={styles.userPlan}>
+                  {user.subscriptionPlan === 'FREE' ? 'Sin plan' : user.subscriptionPlan}
+                </span>
+              </div>
+            </Link>
+          )}
           <div className={styles.footerCard}>
             <span className={styles.footerDot} />
             <span className={styles.footerText}>Datos ATP/WTA en vivo</span>
@@ -64,7 +92,7 @@ export default function Navigation() {
 
       {/* ── Mobile Bottom Bar ── */}
       <nav className={styles.mobileBar}>
-        {navItems.map(item => {
+        {allItems.slice(0, 5).map(item => {
           const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
           return (
             <Link
@@ -77,6 +105,13 @@ export default function Navigation() {
             </Link>
           );
         })}
+        <Link
+          href="/account"
+          className={`${styles.mobileItem} ${pathname === '/account' ? styles.mobileItemActive : ''}`}
+        >
+          <span className={styles.mobileIcon}>👤</span>
+          <span className={styles.mobileLabel}>Cuenta</span>
+        </Link>
       </nav>
     </>
   );
