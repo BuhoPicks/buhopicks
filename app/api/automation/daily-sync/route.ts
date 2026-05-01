@@ -76,6 +76,35 @@ export async function GET(req: NextRequest) {
         durationMs: Date.now() - start,
       });
 
+        durationMs: Date.now() - start,
+      });
+
+    } else if (sport === 'esports') {
+      const { getEsportsPicks } = await import('@/lib/esportsEngine');
+      const data = await getEsportsPicks();
+      return NextResponse.json({
+        message: 'eSports data verified (real-time)',
+        result: {
+          message: 'eSports data verified (real-time)',
+          picksGenerated: data.length,
+          matchesFound: data.length,
+        },
+        durationMs: Date.now() - start,
+      });
+
+    } else if (sport === 'horseracing') {
+      const { getHorseRacingPick } = await import('@/lib/horseRacingEngine');
+      const data = await getHorseRacingPick();
+      return NextResponse.json({
+        message: 'Horse Racing data verified (real-time)',
+        result: {
+          message: 'Horse Racing data verified (real-time)',
+          picksGenerated: data ? 1 : 0,
+          matchesFound: data ? 1 : 0,
+        },
+        durationMs: Date.now() - start,
+      });
+
     } else {
       return NextResponse.json(
         { error: `Unknown sport: "${sport}". Use football, tennis, nba, mlb, or all.` },

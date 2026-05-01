@@ -82,15 +82,19 @@ export function initScheduler() {
 
       console.log(`🕒 Scheduled sync starting at ${new Date().toLocaleTimeString()}...`);
 
-      const [tennisResult, footballResult] = await Promise.allSettled([
+      const [tennisResult, footballResult, esportsResult, racingResult] = await Promise.allSettled([
         runDailyTennisSync(),
         runDailyFootballSync(),
+        import('./esportsEngine').then(m => m.getEsportsPicks()),
+        import('./horseRacingEngine').then(m => m.getHorseRacingPick()),
       ]);
 
-      const tennisOk   = tennisResult.status === 'fulfilled' ? tennisResult.value.success : false;
-      const footballOk = footballResult.status === 'fulfilled' ? footballResult.value.success : false;
+      const tennisOk   = tennisResult.status === 'fulfilled' ? (tennisResult.value as any).success : false;
+      const footballOk = footballResult.status === 'fulfilled' ? (footballResult.value as any).success : false;
+      const esportsOk  = esportsResult.status === 'fulfilled';
+      const racingOk   = racingResult.status === 'fulfilled';
 
-      console.log(`✅ Daily sync complete — Tennis: ${tennisOk ? 'OK' : 'FAIL'}, Football: ${footballOk ? 'OK' : 'FAIL'}. Picks locked for the next 24 hours.`);
+      console.log(`✅ Daily sync complete — Tennis: ${tennisOk ? 'OK' : 'FAIL'}, Football: ${footballOk ? 'OK' : 'FAIL'}, eSports: ${esportsOk ? 'OK' : 'FAIL'}, Racing: ${racingOk ? 'OK' : 'FAIL'}. Picks locked for the next 24 hours.`);
     } catch (error) {
       console.error('❌ Scheduled sync failed:', error);
     } finally {
