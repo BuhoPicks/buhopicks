@@ -241,7 +241,7 @@ export default async function LandingPage() {
       )}
 
       <footer className={styles.landingFooter}>
-        <div style={{ opacity: 0.5, fontSize: '0.7rem', marginBottom: '1rem' }}>v2.1.0-deployed</div>
+        <div style={{ opacity: 0.5, fontSize: '0.7rem', marginBottom: '1rem' }}>v2.1.1-force-sync</div>
         <Link href="/admin" className="btn btn-ghost">⚙️ Configuración y Sincronización Manual</Link>
       </footer>
     </div>

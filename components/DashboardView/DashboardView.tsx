@@ -314,6 +314,11 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
       {((isMainSport && matches.length === 0)) && (
         <div className={styles.emptyState}><div className={styles.emptyIcon}>🦉</div><h3 className={styles.emptyTitle}>No hay picks disponibles</h3><p className={styles.emptyText}>Estamos analizando los próximos partidos de {sport === 'tennis' ? 'tenis' : 'fútbol'}. Vuelve pronto para las mejores recomendaciones.</p></div>
       )}
+
+      <footer style={{ marginTop: '4rem', padding: '2rem', borderTop: '1px solid var(--border)', textAlign: 'center', opacity: 0.5 }}>
+        <div style={{ fontSize: '0.7rem', marginBottom: '0.5rem' }}>v2.1.0-deployed</div>
+        <div style={{ fontSize: '0.8rem' }}>© 2026 Búho Picks · Grupo VIP</div>
+      </footer>
     </div>
   );
 }

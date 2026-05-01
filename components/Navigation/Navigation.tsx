@@ -11,6 +11,8 @@ const navItems = [
   { href: '/football',    icon: '⚽', label: 'Fútbol', title: 'Fútbol' },
   { href: '/basketball',  icon: '🏀', label: 'NBA', title: 'Básquetbol' },
   { href: '/baseball',    icon: '⚾', label: 'MLB', title: 'Béisbol' },
+  { href: '/esports',     icon: '🎮', label: 'eSports', title: 'Panel eSports' },
+  { href: '/horseracing', icon: '🏇', label: 'Carreras', title: 'Caballos' },
   { href: '/history',     icon: '📋', label: 'Historial',  title: 'Historial de Picks' },
   { href: '/performance', icon: '📈', label: 'Rendimiento', title: 'Estadísticas' },
 ];

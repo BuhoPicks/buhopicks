@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client'
 import { PrismaLibSQL } from '@prisma/adapter-libsql'
 import { createClient } from '@libsql/client'
@@ -6,14 +7,12 @@ const prismaClientSingleton = () => {
   const url = process.env.TURSO_DATABASE_URL;
   const authToken = process.env.TURSO_AUTH_TOKEN;
 
-  // Si no hay variables de Turso (ej. durante el build de Vercel),
-  // caemos de forma segura al cliente normal que valida contra DATABASE_URL (file:/tmp/dev.db)
   if (!url || !authToken) {
-    console.warn("⚠️ TURSO variables missing, falling back to default Prisma client for build/dev");
+    console.warn("⚠️ TURSO variables missing, falling back to LOCAL SQLite: " + process.env.DATABASE_URL);
     return new PrismaClient()
   }
 
-  // Si hay variables, usamos Turso
+  console.log("🌐 Connecting to TURSO Database: " + url);
   const libsql = createClient({ url, authToken })
   const adapter = new PrismaLibSQL(libsql)
   return new PrismaClient({ adapter })

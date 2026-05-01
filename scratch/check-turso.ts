@@ -1,8 +1,8 @@
-require('dotenv').config();
-const prisma = require('../lib/prisma').default;
+import 'dotenv/config';
+import prisma from '../lib/prisma';
 
 async function main() {
-  console.log('--- Database Check ---');
+  console.log('--- Turso Database Check ---');
   const tMatches = await prisma.tennisMatch.count();
   const fMatches = await prisma.footballMatch.count();
   const tPicks = await prisma.tennisPick.count();
@@ -22,6 +22,13 @@ async function main() {
     console.log('Last Football Pick Match:', lastFootball.match.homeTeam, 'vs', lastFootball.match.awayTeam);
     console.log('Created At:', lastFootball.createdAt);
   }
+
+  const logs = await prisma.dailySyncLog.findMany({
+    orderBy: { syncedAt: 'desc' },
+    take: 5
+  });
+  console.log('--- Last 5 Sync Logs ---');
+  logs.forEach(l => console.log(`[${l.sport}] ${l.status} - ${l.syncedAt.toISOString()} - Picks: ${l.picksGenerated}`));
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());
