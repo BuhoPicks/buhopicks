@@ -479,6 +479,21 @@
 .cardBasketball:hover { border-color: #F97316; }
 .cardBaseball:hover { border-color: #EF4444; }
 
+.cardBadge {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: var(--brand);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  z-index: 5;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
 .cardEmoji {
   font-size: 4rem;
   filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3));

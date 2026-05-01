@@ -167,6 +167,7 @@ export default async function LandingPage() {
         </Link>
 
         <Link href="/esports" className={`${styles.landingCard} ${styles.cardEsports}`}>
+          <div className={styles.cardBadge}>NUEVO</div>
           <div className={styles.cardEmoji}>🎮</div>
           <div className={styles.cardContent}>
             <h2 className={styles.cardTitle}>Panel eSports</h2>
@@ -179,6 +180,7 @@ export default async function LandingPage() {
         </Link>
 
         <Link href="/horseracing" className={`${styles.landingCard} ${styles.cardHorseracing}`}>
+          <div className={styles.cardBadge}>NUEVO</div>
           <div className={styles.cardEmoji}>🏇</div>
           <div className={styles.cardContent}>
             <h2 className={styles.cardTitle}>Carreras</h2>
@@ -239,6 +241,7 @@ export default async function LandingPage() {
       )}
 
       <footer className={styles.landingFooter}>
+        <div style={{ opacity: 0.5, fontSize: '0.7rem', marginBottom: '1rem' }}>v2.1.0-deployed</div>
         <Link href="/admin" className="btn btn-ghost">⚙️ Configuración y Sincronización Manual</Link>
       </footer>
     </div>

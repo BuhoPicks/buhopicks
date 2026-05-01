@@ -11,7 +11,7 @@ const plans = [
     name: 'Mensual',
     price: 400,
     period: '/mes',
-    features: ['Picks de Tenis (ATP, WTA, ITF)', 'Picks de Fútbol', 'Picks NBA & MLB', 'La Fija del Día', 'Parlays diarios'],
+    features: ['Picks de Tenis (ATP, WTA, ITF)', 'Picks de Fútbol', 'Picks NBA & MLB', 'eSports & Carreras de Caballos', 'La Fija del Día', 'Parlays diarios'],
     badge: '',
     savings: '',
   },
