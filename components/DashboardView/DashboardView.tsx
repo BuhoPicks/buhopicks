@@ -3,7 +3,7 @@ import Link from 'next/link';
 import TennisMatchCard from '@/components/TennisMatchCard/TennisMatchCard';
 import FootballMatchCard from '@/components/FootballMatchCard/FootballMatchCard';
 import ParlaySection from '@/components/ParlaySection/ParlaySection';
-import FootyStatsSection from '@/components/FootyStatsSection/FootyStatsSection';
+// FootyStatsSection removed per user request
 import ResultsChart from '@/components/ResultsChart/ResultsChart';
 import { generateParlays } from '@/lib/parlayEngine';
 import { getBasketballParlay, getBaseballParlay, getBasketballPicks, getBaseballPicks } from '@/lib/usSportsEngine';
@@ -205,9 +205,16 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
               <div style={{ fontSize: '0.8rem', letterSpacing: '0.3em', color: 'var(--premium)', marginTop: '4px', textAlign: 'center', fontWeight: 900 }}>GRUPO VIP</div>
             </h1>
             <div className={styles.sportNav}>
-              {['tennis', 'football', 'basketball', 'baseball'].map(s => (
-                <Link key={s} href={`/${s}?day=${day}&sort=${sortBy}`} className={`${styles.sportTab} ${sport === s ? styles[`active${s.charAt(0).toUpperCase() + s.slice(1)}`] : ''}`}>
-                  <span className={styles.sportEmoji}>{s==='tennis'?'🎾':s==='football'?'⚽':s==='basketball'?'🏀':'⚾'}</span> {s==='tennis'?'Tenis':s==='football'?'Fútbol':s==='basketball'?'NBA':'MLB'}
+              {[
+                { key: 'tennis', emoji: '🎾', label: 'Tenis', href: (d: string, s: string) => `/tennis?day=${d}&sort=${s}` },
+                { key: 'football', emoji: '⚽', label: 'Fútbol', href: (d: string, s: string) => `/football?day=${d}&sort=${s}` },
+                { key: 'basketball', emoji: '🏀', label: 'NBA', href: (d: string, s: string) => `/basketball?day=${d}&sort=${s}` },
+                { key: 'baseball', emoji: '⚾', label: 'MLB', href: (d: string, s: string) => `/baseball?day=${d}&sort=${s}` },
+                { key: 'esports', emoji: '🎮', label: 'eSports', href: () => '/esports' },
+                { key: 'horseracing', emoji: '🏇', label: 'Caballos', href: () => '/horseracing' },
+              ].map(s => (
+                <Link key={s.key} href={s.href(day, sortBy)} className={`${styles.sportTab} ${sport === s.key ? styles[`active${s.key.charAt(0).toUpperCase() + s.key.slice(1)}`] : ''}`}>
+                  <span className={styles.sportEmoji}>{s.emoji}</span> {s.label}
                 </Link>
               ))}
             </div>
@@ -241,7 +248,7 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
 
       {parlays.length > 0 && <ParlaySection parlays={parlays} day={day} />}
       
-      {sport === 'football' && matches.length > 0 && <FootyStatsSection matches={matches} />}
+      {/* FootyStats section removed */}
 
       {(isMainSport ? matches.length > 0 : (day === 'today' ? usTodayPicks.length > 0 : usTomPicks.length > 0)) && (
         <div className={`${styles.statsBar} ${styles['statsBar' + sport.charAt(0).toUpperCase() + sport.slice(1)]} animate-in`}>

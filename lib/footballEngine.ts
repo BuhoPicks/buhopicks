@@ -426,7 +426,7 @@ export async function runDailyFootballSync() {
         // Score all candidates
         const scored = candidates
           .map((c, idx) => ({ ...scorePick(c, seed, idx), candidate: c }))
-          .filter(p => p.estimatedProb >= 0.55) // Only picks with 55%+ probability
+          .filter(p => p.estimatedProb >= 0.62) // STRICTER: only picks with 62%+ probability
           .sort((a, b) => b.qualityScore - a.qualityScore);
 
         // ═══ MARKET DIVERSITY: pick best from different categories ═══
@@ -502,13 +502,13 @@ export async function runDailyFootballSync() {
       }
     }
 
-    // Mark top 3 picks per day as PREMIUM (more candidates for solid picks section)
+    // Mark top 1 pick per day as PREMIUM (only the absolute best)
     let premiumPicksTotal = 0;
     for (const [day, picks] of Object.entries(picksByDay)) {
       if (picks.length === 0) continue;
       picks.sort((a, b) => b.ev - a.ev);
-      // Mark top 3 (or all if fewer)
-      const toMark = picks.slice(0, Math.min(3, picks.length));
+      // Mark only top 1 as PREMIUM — the best pick of the day
+      const toMark = picks.slice(0, 1);
       for (const { id } of toMark) {
         await prisma.footballPick.update({
           where: { id },
@@ -519,7 +519,7 @@ export async function runDailyFootballSync() {
         });
         premiumPicksTotal++;
       }
-      console.log(`⭐ Marked ${toMark.length} premium picks for ${day}`);
+      console.log(`⭐ Marked ${toMark.length} premium pick for ${day}`);
     }
 
     // Clean up orphan matches (no picks)

@@ -65,12 +65,12 @@ function computeSolidScore(pick: any): number {
  *  - If multiple sports are present, prefer sport diversity
  *  - Only picks with prob >= 0.55 and odds in [1.20, 2.50]
  */
-function selectBestPicks(allPicks: any[], maxPicks = 4): any[] {
-  // Hard filter: reasonable odds + probability threshold
+function selectBestPicks(allPicks: any[], maxPicks = 5): any[] {
+  // Hard filter: high probability + reasonable odds
   const eligible = allPicks.filter(p => {
     const prob = p.estimatedProb ?? (p.confidenceScore / 100);
     const odds = p.odds ?? 1.5;
-    return prob >= 0.55 && odds >= 1.20 && odds <= 2.80;
+    return prob >= 0.60 && odds >= 1.20 && odds <= 2.80;
   });
 
   // Score each pick
@@ -127,7 +127,7 @@ export function generateParlays(tennisMatches: any[], footballMatches: any[]): P
   if (allPicks.length < 1) return [];
 
   // ─── Picks más sólidos del día ─────────────────────────────────────────────
-  const solidPicks = selectBestPicks(allPicks, 4);
+  const solidPicks = selectBestPicks(allPicks, 5);
 
   if (solidPicks.length < 2) return [];
 

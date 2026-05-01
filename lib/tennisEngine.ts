@@ -552,7 +552,7 @@ function generatePicks(
 
 function filterAndRankPicks(picks: GeneratedPick[], minEV = 0.0): GeneratedPick[] {
   return picks
-    .filter(p => p.expectedValue >= minEV && p.confidenceScore >= 56)
+    .filter(p => p.expectedValue >= minEV && p.confidenceScore >= 62) // STRICTER: 62%+ confidence
     .sort((a, b) => b.expectedValue - a.expectedValue);
 }
 
@@ -802,7 +802,7 @@ export async function runDailyTennisSync(): Promise<{
     selectedPicks.push(...remaining.slice(0, 80 - selectedPicks.length));
   }
 
-  const top30Picks = selectedPicks.slice(0, 80); 
+  const top30Picks = selectedPicks.slice(0, 25); // Limit to 25 best picks
 
 
   let bestPickId: string | null = null;

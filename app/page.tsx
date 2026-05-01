@@ -8,12 +8,13 @@ import {
   getBasketballParlay, 
   getBaseballParlay 
 } from '@/lib/usSportsEngine';
+import { getEsportsPicks } from '@/lib/esportsEngine';
+import { getHorseRacingPick } from '@/lib/horseRacingEngine';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 async function getLaFija(todayStr: string) {
-  // Fix: Use Mexico City timezone for database queries to match todayStr
   const now = new Date();
   const todayStart = new Date(now.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
   todayStart.setHours(0,0,0,0);
@@ -89,9 +90,11 @@ export default async function LandingPage() {
     day: '2-digit'
   }).format(new Date()).replace(/-/g, '');
 
-  const [{ tennisCount, footballCount }, laFija] = await Promise.all([
+  const [{ tennisCount, footballCount }, laFija, esportsPicks, horseRacingPick] = await Promise.all([
     getStats(),
-    getLaFija(todayStr)
+    getLaFija(todayStr),
+    getEsportsPicks(),
+    getHorseRacingPick(),
   ]);
   
   // Parlays for the middle section
@@ -143,7 +146,7 @@ export default async function LandingPage() {
           <div className={styles.cardEmoji}>🏀</div>
           <div className={styles.cardContent}>
             <h2 className={styles.cardTitle}>Panel NBA</h2>
-            <p className={styles.cardDesc}>Picks y análisis completo</p>
+            <p className={styles.cardDesc}>Props y análisis completo</p>
             <div className={styles.cardPreview}>
               Análisis completo hoy y mañana
             </div>
@@ -155,9 +158,33 @@ export default async function LandingPage() {
           <div className={styles.cardEmoji}>⚾</div>
           <div className={styles.cardContent}>
             <h2 className={styles.cardTitle}>Panel MLB</h2>
-            <p className={styles.cardDesc}>Picks y análisis completo</p>
+            <p className={styles.cardDesc}>Props y análisis completo</p>
             <div className={styles.cardPreview}>
               Análisis completo hoy y mañana
+            </div>
+            <span className={styles.cardAction}>Entrar →</span>
+          </div>
+        </Link>
+
+        <Link href="/esports" className={`${styles.landingCard} ${styles.cardEsports}`}>
+          <div className={styles.cardEmoji}>🎮</div>
+          <div className={styles.cardContent}>
+            <h2 className={styles.cardTitle}>Panel eSports</h2>
+            <p className={styles.cardDesc}>LoL, CS2, Valorant, Dota 2</p>
+            <div className={styles.cardPreview}>
+              Top 3 picks del día
+            </div>
+            <span className={styles.cardAction}>Entrar →</span>
+          </div>
+        </Link>
+
+        <Link href="/horseracing" className={`${styles.landingCard} ${styles.cardHorseracing}`}>
+          <div className={styles.cardEmoji}>🏇</div>
+          <div className={styles.cardContent}>
+            <h2 className={styles.cardTitle}>Carreras</h2>
+            <p className={styles.cardDesc}>Caballo ganador del día</p>
+            <div className={styles.cardPreview}>
+              1 pick premium diario
             </div>
             <span className={styles.cardAction}>Entrar →</span>
           </div>
