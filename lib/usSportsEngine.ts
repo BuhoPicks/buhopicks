@@ -159,37 +159,37 @@ async function generateNBAPlayerProps(dateStr: string): Promise<any[]> {
           if (!playerName) continue;
           const avg = parseFloat(ldr.value) || 0;
 
+          const variance = (playerName.charCodeAt(0) % 10) * 0.005; // 0 to 0.045 variance for randomness
+
           // ── POINTS ──
           if (leader.name === 'pointsPerGame') {
-            // Over: when avg is well above line
-            if (avg >= 15) {
-              const line = Math.floor(avg - 3.5);
+            if (avg >= 14) {
+              const line = Math.floor(avg - 2);
               const margin = avg - line - 0.5;
-              const prob = Math.min(0.80, 0.55 + margin * 0.02);
+              const prob = Math.min(0.78, 0.59 + margin * 0.03 + variance);
               const key = `${playerName}-pts-o`;
-              if (prob >= 0.65 && !seenKeys.has(key)) {
+              if (prob >= 0.58 && !seenKeys.has(key)) {
                 seenKeys.add(key);
                 candidates.push({
                   playerName, teamName, gameId: ev.id,
                   stat: 'Puntos', avg, line: line + 0.5, direction: 'Over', prob,
                   desc: `${playerName} Over ${line}.5 Pts`,
-                  explanation: `${playerName} promedia ${avg.toFixed(1)} PPG. La línea de ${line}.5 está ${margin.toFixed(1)} pts por debajo de su promedio, dando un margen cómodo para superar esta marca.`,
+                  explanation: `${playerName} promedia ${avg.toFixed(1)} PPG. La línea de ${line}.5 está por debajo de su promedio, dando un margen cómodo.`,
                 });
               }
             }
-            // Under: when a player is inconsistent or facing tough D
-            if (avg >= 12 && avg <= 22) {
-              const line = Math.ceil(avg + 2.5);
+            if (avg >= 10 && avg <= 20) {
+              const line = Math.ceil(avg + 2);
               const margin = line + 0.5 - avg;
-              const prob = Math.min(0.75, 0.54 + margin * 0.02);
+              const prob = Math.min(0.72, 0.58 + margin * 0.03 + variance);
               const key = `${playerName}-pts-u`;
-              if (prob >= 0.65 && !seenKeys.has(key)) {
+              if (prob >= 0.58 && !seenKeys.has(key)) {
                 seenKeys.add(key);
                 candidates.push({
                   playerName, teamName, gameId: ev.id,
                   stat: 'Puntos', avg, line: line + 0.5, direction: 'Under', prob,
                   desc: `${playerName} Under ${line}.5 Pts`,
-                  explanation: `${playerName} promedia ${avg.toFixed(1)} PPG. Con línea en ${line}.5, tiene un margen de +${margin.toFixed(1)} pts para mantenerse debajo, probabilidad alta de no alcanzar esa cifra.`,
+                  explanation: `${playerName} promedia ${avg.toFixed(1)} PPG. Con línea en ${line}.5, tiene un buen margen de +${margin.toFixed(1)} pts para mantenerse debajo.`,
                 });
               }
             }
@@ -197,18 +197,18 @@ async function generateNBAPlayerProps(dateStr: string): Promise<any[]> {
 
           // ── REBOUNDS ──
           if (leader.name === 'reboundsPerGame') {
-            if (avg >= 5) {
-              const line = Math.floor(avg - 2);
+            if (avg >= 4.5) {
+              const line = Math.floor(avg - 1);
               const margin = avg - line - 0.5;
-              const prob = Math.min(0.78, 0.55 + margin * 0.03);
+              const prob = Math.min(0.76, 0.58 + margin * 0.04 + variance);
               const key = `${playerName}-reb-o`;
-              if (prob >= 0.65 && !seenKeys.has(key)) {
+              if (prob >= 0.58 && !seenKeys.has(key)) {
                 seenKeys.add(key);
                 candidates.push({
                   playerName, teamName, gameId: ev.id,
                   stat: 'Rebotes', avg, line: line + 0.5, direction: 'Over', prob,
                   desc: `${playerName} Over ${line}.5 Reb`,
-                  explanation: `${playerName} captura ${avg.toFixed(1)} RPG esta temporada. Línea de ${line}.5 está por debajo de su promedio (+${margin.toFixed(1)}), alta probabilidad de superar.`,
+                  explanation: `${playerName} captura ${avg.toFixed(1)} RPG. Línea de ${line}.5 está por debajo de su promedio, alta probabilidad de superar.`,
                 });
               }
             }
@@ -216,18 +216,18 @@ async function generateNBAPlayerProps(dateStr: string): Promise<any[]> {
 
           // ── ASSISTS ──
           if (leader.name === 'assistsPerGame') {
-            if (avg >= 4) {
-              const line = Math.floor(avg - 1.5);
+            if (avg >= 3.5) {
+              const line = Math.floor(avg - 1);
               const margin = avg - line - 0.5;
-              const prob = Math.min(0.76, 0.54 + margin * 0.03);
+              const prob = Math.min(0.75, 0.58 + margin * 0.04 + variance);
               const key = `${playerName}-ast-o`;
-              if (prob >= 0.65 && !seenKeys.has(key)) {
+              if (prob >= 0.58 && !seenKeys.has(key)) {
                 seenKeys.add(key);
                 candidates.push({
                   playerName, teamName, gameId: ev.id,
                   stat: 'Asistencias', avg, line: line + 0.5, direction: 'Over', prob,
                   desc: `${playerName} Over ${line}.5 Ast`,
-                  explanation: `${playerName} distribuye ${avg.toFixed(1)} APG. La línea de ${line}.5 ofrece un margen de +${margin.toFixed(1)} asistencias sobre el promedio.`,
+                  explanation: `${playerName} distribuye ${avg.toFixed(1)} APG. La línea de ${line}.5 ofrece valor estadístico favorable.`,
                 });
               }
             }
@@ -244,45 +244,41 @@ async function generateNBAPlayerProps(dateStr: string): Promise<any[]> {
       if (ptsLeader && rebLeader) {
         const ptsName = ptsLeader.athlete?.displayName ?? '';
         const ptsAvg = parseFloat(ptsLeader.value) || 0;
-
-        // Check if same player leads in rebounds too (versatile player)
-        const rebName = rebLeader.athlete?.displayName ?? '';
         const rebAvg = parseFloat(rebLeader.value) || 0;
+        const variance = (ptsName.charCodeAt(0) % 10) * 0.005;
 
-        if (ptsName && ptsAvg >= 18 && rebAvg >= 6) {
-          // PTS+REB combined
+        if (ptsName && ptsAvg >= 15 && rebAvg >= 5) {
           const combined = ptsAvg + rebAvg;
-          const line = Math.floor(combined - 4);
+          const line = Math.floor(combined - 2.5);
           const margin = combined - line - 0.5;
-          const prob = Math.min(0.77, 0.56 + margin * 0.015);
+          const prob = Math.min(0.77, 0.58 + margin * 0.02 + variance);
           const key = `${ptsName}-pr`;
-          if (prob >= 0.65 && !seenKeys.has(key)) {
+          if (prob >= 0.58 && !seenKeys.has(key)) {
             seenKeys.add(key);
             candidates.push({
               playerName: ptsName, teamName, gameId: ev.id,
               stat: 'Pts+Reb', avg: combined, line: line + 0.5, direction: 'Over', prob,
               desc: `${ptsName} Over ${line}.5 Pts+Reb`,
-              explanation: `${ptsName} combina ${ptsAvg.toFixed(1)} PPG + ${rebAvg.toFixed(1)} RPG = ${combined.toFixed(1)} promedio combinado. Línea de ${line}.5 deja margen de +${margin.toFixed(1)}.`,
+              explanation: `${ptsName} promedia ${ptsAvg.toFixed(1)} Pts y ${rebAvg.toFixed(1)} Reb (${combined.toFixed(1)} total). Línea de ${line}.5 favorable.`,
             });
           }
         }
 
-        // PTS+REB+AST
-        if (ptsName && astLeader && ptsAvg >= 20) {
+        if (ptsName && astLeader && ptsAvg >= 18) {
           const astAvg = parseFloat(astLeader.value) || 0;
           if (astAvg >= 3) {
             const combined3 = ptsAvg + rebAvg + astAvg;
-            const line3 = Math.floor(combined3 - 5);
+            const line3 = Math.floor(combined3 - 3.5);
             const margin3 = combined3 - line3 - 0.5;
-            const prob3 = Math.min(0.76, 0.55 + margin3 * 0.012);
+            const prob3 = Math.min(0.76, 0.58 + margin3 * 0.02 + variance);
             const key3 = `${ptsName}-pra`;
-            if (prob3 >= 0.65 && !seenKeys.has(key3)) {
+            if (prob3 >= 0.58 && !seenKeys.has(key3)) {
               seenKeys.add(key3);
               candidates.push({
                 playerName: ptsName, teamName, gameId: ev.id,
                 stat: 'Pts+Reb+Ast', avg: combined3, line: line3 + 0.5, direction: 'Over', prob: prob3,
                 desc: `${ptsName} Over ${line3}.5 PRA`,
-                explanation: `${ptsName} acumula ${ptsAvg.toFixed(1)}P + ${rebAvg.toFixed(1)}R + ${astAvg.toFixed(1)}A = ${combined3.toFixed(1)} PRA promedio. Con línea en ${line3}.5, tiene margen sólido.`,
+                explanation: `${ptsName} acumula ${combined3.toFixed(1)} PRA en promedio. Con línea en ${line3}.5, tiene margen sólido.`,
               });
             }
           }
@@ -293,7 +289,7 @@ async function generateNBAPlayerProps(dateStr: string): Promise<any[]> {
 
   // Sort by probability descending, take TOP picks
   candidates.sort((a, b) => b.prob - a.prob);
-  const bestCandidates = candidates.slice(0, 8); // More candidates, will be filtered later
+  const bestCandidates = candidates.slice(0, 15); // Generate plenty of candidates so filter has enough
 
   return bestCandidates.map(c => ({
     sport: 'basketball', icon: '🏀',
@@ -444,10 +440,22 @@ export async function getBasketballPicks(dateStr: string): Promise<any[]> {
       fetchMoneylinePicks(url, 'basketball', '🏀'),
       generateNBAPlayerProps(dateStr),
     ]);
+    
+    // Group by player/team to avoid having all picks from the exact same player
+    const playerCounts: Record<string, number> = {};
+    
     const all = [...ml, ...props]
       .filter(p => p.confidenceScore >= 58)
       .sort((a, b) => b.confidenceScore - a.confidenceScore)
-      .slice(0, 8); // MAX 8 picks for NBA
+      .filter(p => {
+        // Limit to max 2 props per player/match target
+        const name = p.match.player1Name;
+        if (!playerCounts[name]) playerCounts[name] = 0;
+        if (playerCounts[name] >= 2) return false;
+        playerCounts[name]++;
+        return true;
+      })
+      .slice(0, 10); // MAX 10 picks for NBA to ensure at least 5 are shown
 
     // Mark top pick as premium
     if (all.length > 0) all[0].isPremiumPick = true;
