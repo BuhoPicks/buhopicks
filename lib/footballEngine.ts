@@ -387,8 +387,9 @@ export async function runDailyFootballSync() {
       lt:  new Date(futureLimit.getFullYear(), futureLimit.getMonth(), futureLimit.getDate()),
     };
 
-    await prisma.footballPick.deleteMany({ where: { match: { date: dateRange } } });
-    await prisma.footballMatch.deleteMany({ where: { date: dateRange } });
+    // Removed global deleteMany to preserve history
+    // await prisma.footballPick.deleteMany({ where: { match: { date: dateRange } } });
+    // await prisma.footballMatch.deleteMany({ where: { date: dateRange } });
 
     let totalMatches = 0;
     let totalPicks   = 0;
@@ -409,8 +410,10 @@ export async function runDailyFootballSync() {
         const dayKey = date.toISOString().split('T')[0];
 
         // Only include SCHEDULED matches (not already finished)
-        const state = event.status?.type?.state;
-        if (state === 'post') continue;
+        const status = event.status?.type?.name;
+        // Include scheduled, live, and in-progress matches
+        const allowedStatuses = ['SCHEDULED', 'STATUS_SCHEDULED', 'STATUS_IN_PROGRESS', 'LIVE', 'IN_PROGRESS'];
+        if (!allowedStatuses.includes(status)) continue;
 
         const homeRank = parseInt(home.rank) || 80;
         const awayRank = parseInt(away.rank) || 80;
@@ -426,7 +429,7 @@ export async function runDailyFootballSync() {
         // Score all candidates
         const scored = candidates
           .map((c, idx) => ({ ...scorePick(c, seed, idx), candidate: c }))
-          .filter(p => p.estimatedProb >= 0.62) // STRICTER: only picks with 62%+ probability
+          .filter(p => p.confidenceScore >= 58) // Adjusted to 58%+ for better volume
           .sort((a, b) => b.qualityScore - a.qualityScore);
 
         // ═══ MARKET DIVERSITY: pick best from different categories ═══
@@ -469,8 +472,8 @@ export async function runDailyFootballSync() {
           }
         });
 
-        // Clear existing picks for this match to avoid duplicates/stale data
-        await prisma.footballPick.deleteMany({ where: { matchId: match.id } });
+        // Clear existing PENDING picks for this match to avoid duplicates/stale data without deleting history
+        await prisma.footballPick.deleteMany({ where: { matchId: match.id, status: 'PENDING' } });
 
         totalMatches++;
 
@@ -522,9 +525,10 @@ export async function runDailyFootballSync() {
       console.log(`⭐ Marked ${toMark.length} premium pick for ${day}`);
     }
 
-    // Clean up orphan matches (no picks)
+    // Clean up orphan matches (no picks) that are in the future
+    const futureDateRange = { gte: new Date() };
     const deleted = await prisma.footballMatch.deleteMany({
-      where: { date: dateRange, picks: { none: {} } }
+      where: { date: futureDateRange, picks: { none: {} } }
     });
     if (deleted.count > 0) console.log(`🧹 Removed ${deleted.count} orphan matches.`);
 

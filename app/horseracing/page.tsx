@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import styles from '@/app/page.module.css';
 import { getHorseRacingPick } from '@/lib/horseRacingEngine';
+import OptimizeButton from '@/components/OptimizeButton/OptimizeButton';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -10,7 +11,7 @@ export default async function HorseRacingPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.sportBg} style={{ backgroundImage: "url('/bg_baseball.png')" }} />
+      <div className={styles.sportBg} style={{ backgroundImage: "url('/bg_racing.png')" }} />
       <header className={styles.pageHeader}>
         <div className={styles.headerTop}>
           <div className={styles.brandGroup}>
@@ -39,6 +40,9 @@ export default async function HorseRacingPage() {
         </div>
         <div className={styles.headerBottom}>
           <p className={styles.pageSubtitle}>El mejor pick de carreras de caballos del día — Un solo caballo ganador</p>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <OptimizeButton label="Optimizar Algoritmo de Caballos" sport="horseracing" />
+          </div>
         </div>
       </header>
 

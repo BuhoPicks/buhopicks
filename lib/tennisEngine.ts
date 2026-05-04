@@ -216,18 +216,18 @@ function analyzeMatch(
   let score1 = 0;
   let score2 = 0;
 
-  // ── 1. Ranking Component (0-20 pts) ──────────────────────────────
+  // ── 1. Ranking Component (0-25 pts) ──────────────────────────────
   const rankGap = p2.ranking - p1.ranking;  // positive = p1 is better ranked
-  const rankScore = Math.min(20, Math.abs(rankGap) / 10);
+  const rankScore = Math.min(25, Math.abs(rankGap) / 2); // 1 pt every 2 places
   if (rankGap > 0) score1 += rankScore;
   else score2 += rankScore;
 
   // ── 2. Surface Win Rate (0-15 pts) ──────────────────────────────
   const p1SurfRate = surface === 'Clay' ? p1.winRateClay : surface === 'Grass' ? p1.winRateGrass : p1.winRateHard;
   const p2SurfRate = surface === 'Clay' ? p2.winRateClay : surface === 'Grass' ? p2.winRateGrass : p2.winRateHard;
-  const surfDiff = (p1SurfRate - p2SurfRate) * 30;  // scale to 0-15 range
-  if (surfDiff > 0) score1 += Math.min(15, surfDiff);
-  else score2 += Math.min(15, -surfDiff);
+  const surfDiff = (p1SurfRate - p2SurfRate) * 50;  // Increased weight (from 30 to 50)
+  if (surfDiff > 0) score1 += Math.min(20, surfDiff);
+  else score2 += Math.min(20, -surfDiff);
 
   // ── 3. Recent Form (0-15 pts) ────────────────────────────────────
   const form5_p1 = formScore(p1.form5);   // max 15
@@ -373,10 +373,12 @@ function generatePicks(
   const favPlayer = analysis.prob1Wins >= analysis.prob2Wins ? p1 : p2;
   const dogPlayer = analysis.prob1Wins >= analysis.prob2Wins ? p2 : p1;
 
+  console.log(`🔍 Analyzing ${p1.name} vs ${p2.name}: favProb=${favProb}`);
+
   const trueOdds = 1 / favProb;
   const { odds: mktOdds, ev } = calculateOddsAndEV(favProb);
 
-  if (favProb > 0.52) {  // Only recommend if we have a real edge
+  if (favProb >= 0.50) {  // FORCE include ALL winners for now
     const surfFormStr = surface === 'Clay' ? `${(favPlayer.winRateClay * 100).toFixed(0)}% win rate on clay` :
       surface === 'Grass' ? `${(favPlayer.winRateGrass * 100).toFixed(0)}% win rate on grass` :
       `${(favPlayer.winRateHard * 100).toFixed(0)}% win rate on hard courts`;
@@ -550,9 +552,9 @@ function generatePicks(
 
 // ─── Value Filter ─────────────────────────────────────────────────────────────
 
-function filterAndRankPicks(picks: GeneratedPick[], minEV = 0.0): GeneratedPick[] {
+function filterAndRankPicks(picks: GeneratedPick[], minEV = -0.1): GeneratedPick[] {
   return picks
-    .filter(p => p.expectedValue >= minEV && p.confidenceScore >= 62) // STRICTER: 62%+ confidence
+    .filter(p => p.confidenceScore >= 50) // Absolute minimum: 50%
     .sort((a, b) => b.expectedValue - a.expectedValue);
 }
 
@@ -616,9 +618,9 @@ export async function runDailyTennisSync(): Promise<{
     lt:  new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate() + 2),
   };
 
-  // Clear existing picks for today/tomorrow to prevent duplicates e improve performance
+  // Clear existing PENDING picks for today/tomorrow to prevent duplicates e improve performance without deleting history
   await prisma.tennisPick.deleteMany({
-    where: { match: { date: dateRange } }
+    where: { match: { date: dateRange }, status: 'PENDING' }
   });
   
   // Note: We no longer delete TennisMatch here to avoid Foreign Key errors
@@ -705,7 +707,7 @@ export async function runDailyTennisSync(): Promise<{
         const dbMatch = await prisma.tennisMatch.upsert({
           where: { espnId: comp.id || event.id },
           update: {
-            status: 'SCHEDULED',
+            status: comp.status?.type?.name || 'SCHEDULED',
             date: matchDate,
             round,
           },
@@ -726,7 +728,7 @@ export async function runDailyTennisSync(): Promise<{
             city:    comp.venue?.city || null,
             country: comp.venue?.country || null,
             date: matchDate,
-            status: 'SCHEDULED',
+            status: comp.status?.type?.name || 'SCHEDULED',
           }
         });
 
@@ -827,6 +829,8 @@ export async function runDailyTennisSync(): Promise<{
           statsBreakdown: pick.statsBreakdown,
         }
       });
+      
+      console.log(`✅ Saved Tennis Pick: ${pick.selection} for match ${matchId}`);
 
       totalPicks++;
 

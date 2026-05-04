@@ -15,25 +15,23 @@ type SportFilter = 'tennis' | 'football' | 'basketball' | 'baseball';
 type SortFilter = 'relevance' | 'time';
 
 function getMEXDateWindow(day: DayFilter) {
-  // Mexico City is UTC-6 (CST) — we determine the current local date there
-  const MX_OFFSET_MS = 6 * 60 * 60 * 1000; // 6h ahead of UTC
-  const nowUTC = Date.now();
-  // What is the "local" Mexico midnight in UTC?
-  const mxMidnightUTC = nowUTC - (nowUTC % 86400000) - ((nowUTC % 86400000) < MX_OFFSET_MS ? 86400000: 0) + MX_OFFSET_MS;
+  // Mexico City is UTC-6
+  const now = new Date();
+  const mxDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
+  
+  if (day === 'tomorrow') {
+    mxDate.setDate(mxDate.getDate() + 1);
+  }
+  
+  const y = mxDate.getFullYear();
+  const m = mxDate.getMonth();
+  const d = mxDate.getDate();
 
-  // Simpler & correct approach: derive MX "today" date string
-  const mxNowDate = new Date(nowUTC - MX_OFFSET_MS);
-  const y = mxNowDate.getUTCFullYear();
-  const m = mxNowDate.getUTCMonth();
-  const d = mxNowDate.getUTCDate();
-
-  // Start of today/tomorrow in UTC (Mexico midnight = UTC+6)
-  const startLocal = new Date(Date.UTC(y, m, d + (day === 'tomorrow' ? 1 : 0)));
-  const endLocal   = new Date(startLocal.getTime() + 86400000);
-
-  // Convert local midnight back to UTC for DB queries
-  const start = new Date(startLocal.getTime() + MX_OFFSET_MS);
-  const end   = new Date(endLocal.getTime()   + MX_OFFSET_MS);
+  // Start of day in Mexico (Midnight)
+  // To get the UTC equivalent of MX Midnight:
+  // MX 00:00 = UTC 06:00
+  const start = new Date(Date.UTC(y, m, d, 6, 0, 0, 0));
+  const end   = new Date(start.getTime() + 86400000);
 
   return { start, end };
 }
@@ -109,13 +107,13 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
   const todayStr    = mxFmt(0);
   const tomorrowStr = mxFmt(1);
 
-  const usTodayPicks = sport === 'basketball' ? await getBasketballPicks(todayStr)
+  const usTodayPicks = (sport === 'basketball' ? await getBasketballPicks(todayStr)
                      : sport === 'baseball'    ? await getBaseballPicks(todayStr)
-                     : [];
+                     : []).slice(0, 4);
 
-  const usTomPicks = sport === 'basketball' ? await getBasketballPicks(tomorrowStr)
+  const usTomPicks = (sport === 'basketball' ? await getBasketballPicks(tomorrowStr)
                    : sport === 'baseball'    ? await getBaseballPicks(tomorrowStr)
-                   : [];
+                   : []).slice(0, 4);
 
   const parlays = [];
   if (sport === 'tennis') {
@@ -137,11 +135,19 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
   }
 
 
-  const premiumPick = isMainSport ? (matches as any[])
-    .flatMap(m => m.picks.filter((p: any) => p.isPremiumPick))
-    .sort((a, b) => b.expectedValue - a.expectedValue)[0] ?? null : null;
+  let premiumPick = null;
+  let premiumMatch = null;
 
-  const premiumMatch = premiumPick ? matches.find(m => m.id === premiumPick.matchId) : null;
+  if (isMainSport) {
+    premiumPick = (matches as any[])
+      .flatMap(m => m.picks.filter((p: any) => p.isPremiumPick))
+      .sort((a, b) => b.expectedValue - a.expectedValue)[0] ?? null;
+    premiumMatch = premiumPick ? matches.find(m => m.id === premiumPick.matchId) : null;
+  } else {
+    const currentUSPicks = day === 'today' ? usTodayPicks : usTomPicks;
+    premiumPick = currentUSPicks.find((p: any) => p.isPremiumPick) || null;
+    // For US sports, the "match" info is already inside the pick object
+  }
 
   const usTotalPicksCount = usTodayPicks.length + usTomPicks.length;
   const totalPicksCalculated = isMainSport ? matches.reduce((s, m) => s + m.picks.length, 0) : usTotalPicksCount;
@@ -171,17 +177,26 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
   ] : [];
 
   if (isMainSport) {
+    let allPicks = [];
     for (const match of matches) {
-      const matchHour = (new Date(match.date).getUTCHours() - 6 + 24) % 24;
+      const bestMatchPick = match.picks[0];
+      if (bestMatchPick) {
+        allPicks.push({ ...bestMatchPick, parentMatch: match });
+      }
+    }
+    
+    // Solo los 4 mejores picks en total
+    allPicks.sort((a,b) => b.expectedValue - a.expectedValue);
+    allPicks = allPicks.slice(0, 4);
+
+    for (const pick of allPicks) {
+      const matchHour = (new Date(pick.parentMatch.date).getUTCHours() - 6 + 24) % 24;
       let slotIdx = 0;
       if (matchHour >= 6 && matchHour < 12) slotIdx = 1;
       else if (matchHour >= 12 && matchHour < 18) slotIdx = 2;
       else if (matchHour >= 18) slotIdx = 3;
       
-      const bestMatchPick = match.picks[0];
-      if (bestMatchPick) {
-        picksBySlot[slotIdx].picks.push({ ...bestMatchPick, parentMatch: match });
-      }
+      picksBySlot[slotIdx].picks.push(pick);
     }
     picksBySlot.forEach(s => s.picks.sort((a,b) => b.expectedValue - a.expectedValue));
   }
@@ -192,7 +207,13 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
     hour12: false,
     timeZone: 'America/Mexico_City'
   });
-  const sportBg = sport === 'tennis' ? '/bg_tennis.png' : sport === 'football' ? '/bg_football.png' : sport === 'basketball' ? '/bg_basketball.png' : sport === 'baseball' ? '/bg_baseball.png' : '/sports_background_v2.png';
+  const sportBg = sport === 'tennis' ? '/bg_tennis.png' 
+                : sport === 'football' ? '/bg_football.png' 
+                : sport === 'basketball' ? '/bg_basketball.png' 
+                : sport === 'baseball' ? '/bg_baseball.png' 
+                : sport === 'esports' ? '/bg_esports.png'
+                : sport === 'horseracing' ? '/bg_racing.png'
+                : '/sports_background_v2.png';
 
   return (
     <div className={styles.page}>
@@ -260,10 +281,18 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
         </div>
       )}
 
-      {premiumMatch && premiumPick && day === 'today' && sortBy === 'relevance' && (
+      {premiumPick && day === 'today' && sortBy === 'relevance' && (
         <section className="animate-in delay-1" style={{ marginBottom: '3rem' }}>
           <div className={styles.premiumLabel}><span>⭐</span> PICK PREMIUM DEL DÍA</div>
-          <FootballMatchCard match={premiumMatch} picks={[premiumPick]} featured={true} />
+          {isMainSport ? (
+            sport === 'tennis' 
+              ? <TennisMatchCard match={premiumMatch} picks={[premiumPick]} />
+              : <FootballMatchCard match={premiumMatch} picks={[premiumPick]} featured={true} />
+          ) : (
+            <div className={styles.premiumCardWrapper}>
+              <MiniPickCard pick={premiumPick} sport={sport} featured={true} />
+            </div>
+          )}
         </section>
       )}
 

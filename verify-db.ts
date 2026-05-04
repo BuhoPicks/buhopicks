@@ -16,7 +16,13 @@ async function checkDB() {
   console.log('Football matches today:', fCount);
   console.log('Tennis matches today:', tCount);
   
-  if (fCount === 0) {
+  const fCount2 = await prisma.footballMatch.count({ where: { date: { gte: end, lt: new Date(end.getTime() + 86400000) } } });
+  const tCount2 = await prisma.tennisMatch.count({ where: { date: { gte: end, lt: new Date(end.getTime() + 86400000) } } });
+  
+  console.log('Football matches tomorrow:', fCount2);
+  console.log('Tennis matches tomorrow:', tCount2);
+  
+  if (fCount === 0 && fCount2 === 0) {
     const totalF = await prisma.footballMatch.count();
     console.log('Total football matches in DB:', totalF);
     const firstF = await prisma.footballMatch.findFirst({ orderBy: { date: 'asc' } });

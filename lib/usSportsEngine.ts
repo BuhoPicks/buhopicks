@@ -75,8 +75,8 @@ async function fetchMoneylinePicks(url: string, sportName: string, icon: string)
     const mktOdds = parseFloat(Math.max(1.20, Math.min(2.50, fairOdds * 0.955)).toFixed(2));
     const ev = prob * mktOdds - 1;
 
-    // STRICTER: require 65%+ probability AND 10%+ edge between teams
-    if (prob < 0.65 || edge < 0.10) continue;
+    // Lowered threshold: 60%+ probability AND 8%+ edge
+    if (prob < 0.60 || edge < 0.08) continue;
 
     const sportLabel = sportName === 'basketball' ? 'NBA' : 'MLB';
     let explanation = `${fav.team?.displayName ?? '?'} (${favRec}) llega como favorito frente a ${dog.team?.displayName ?? '?'} (${dogRec}). `;
@@ -445,9 +445,9 @@ export async function getBasketballPicks(dateStr: string): Promise<any[]> {
       generateNBAPlayerProps(dateStr),
     ]);
     const all = [...ml, ...props]
-      .filter(p => p.confidenceScore >= 65)
+      .filter(p => p.confidenceScore >= 58)
       .sort((a, b) => b.confidenceScore - a.confidenceScore)
-      .slice(0, 5); // MAX 5 picks for NBA
+      .slice(0, 8); // MAX 8 picks for NBA
 
     // Mark top pick as premium
     if (all.length > 0) all[0].isPremiumPick = true;
@@ -463,9 +463,9 @@ export async function getBaseballPicks(dateStr: string): Promise<any[]> {
       generateMLBPlayerProps(dateStr),
     ]);
     const all = [...ml, ...props]
-      .filter(p => p.confidenceScore >= 60)
+      .filter(p => p.confidenceScore >= 55)
       .sort((a, b) => b.confidenceScore - a.confidenceScore)
-      .slice(0, 5); // MAX 5 picks for MLB
+      .slice(0, 8); // MAX 8 picks for MLB
 
     if (all.length > 0) all[0].isPremiumPick = true;
     return all;

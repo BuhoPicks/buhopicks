@@ -2,6 +2,7 @@ import Link from 'next/link';
 import styles from '@/app/page.module.css';
 import MiniPickCard from '@/components/MiniPickCard/MiniPickCard';
 import { getEsportsPicks } from '@/lib/esportsEngine';
+import OptimizeButton from '@/components/OptimizeButton/OptimizeButton';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,7 +13,7 @@ export default async function EsportsPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.sportBg} style={{ backgroundImage: "url('/bg_basketball.png')" }} />
+      <div className={styles.sportBg} style={{ backgroundImage: "url('/bg_esports.png')" }} />
       <header className={styles.pageHeader}>
         <div className={styles.headerTop}>
           <div className={styles.brandGroup}>
@@ -41,6 +42,9 @@ export default async function EsportsPage() {
         </div>
         <div className={styles.headerBottom}>
           <p className={styles.pageSubtitle}>Los 3 mejores picks de eSports del día — LoL, CS2, Valorant, Dota 2</p>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <OptimizeButton label="Optimizar Modelo eSports" sport="esports" />
+          </div>
         </div>
       </header>
 
@@ -73,7 +77,7 @@ export default async function EsportsPage() {
       {picks.length > 0 ? (
         <section className={styles.matchesSection} style={{ marginTop: '2rem' }}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}><span className={styles.sectionIcon}>🎮</span> Top 3 eSports Picks del Día</h2>
+            <h2 className={styles.sectionTitle}><span className={styles.sectionIcon}>🎮</span> Picks más sólidos de eSports</h2>
           </div>
           <div className={styles.top12Grid}>
             {picks.map((pick: any, i: number) => (

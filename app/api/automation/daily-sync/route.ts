@@ -73,10 +73,6 @@ export async function GET(req: NextRequest) {
           picksGenerated: data ? data.picks.length : 0,
           matchesFound: data ? data.picks.length : 0,
         },
-        durationMs: Date.now() - start,
-      });
-
-        durationMs: Date.now() - start,
       });
 
     } else if (sport === 'esports') {
