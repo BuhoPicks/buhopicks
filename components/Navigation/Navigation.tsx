@@ -11,10 +11,6 @@ const navItems = [
   { href: '/football',    icon: '⚽', label: 'Fútbol', title: 'Fútbol' },
   { href: '/basketball',  icon: '🏀', label: 'NBA', title: 'Básquetbol' },
   { href: '/baseball',    icon: '⚾', label: 'MLB', title: 'Béisbol' },
-  { href: '/esports',     icon: '🎮', label: 'eSports', title: 'Panel eSports' },
-  { href: '/horseracing', icon: '🏇', label: 'Carreras', title: 'Caballos' },
-  { href: '/history',     icon: '📋', label: 'Historial',  title: 'Historial de Picks' },
-  { href: '/performance', icon: '📈', label: 'Rendimiento', title: 'Estadísticas' },
 ];
 
 const HIDDEN_PATHS = ['/login', '/register', '/pricing'];
@@ -39,15 +35,15 @@ export default function Navigation() {
     <>
       {/* ── Desktop Sidebar ── */}
       <nav className={styles.sidebar}>
-        <div className={styles.logo}>
+        <Link href="/" className={styles.logo} style={{ textDecoration: 'none' }}>
           <div className={styles.logoImageWrap}>
-            <img src="/logo.png" alt="Betting Man Logo" className={styles.logoImg} />
+            <img src="/logo.png" alt="Búho Picks Logo" className={styles.logoImg} />
           </div>
           <div>
             <span className={`text-gradient ${styles.logoName}`}>Búho Picks</span>
             <span className={styles.logoSub} style={{ letterSpacing: '0.2em', color: 'var(--premium)', fontWeight: 800 }}>GRUPO VIP</span>
           </div>
-        </div>
+        </Link>
 
         <div className={styles.divider} />
 

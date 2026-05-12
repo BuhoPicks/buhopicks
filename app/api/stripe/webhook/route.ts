@@ -67,8 +67,8 @@ export async function POST(request: NextRequest) {
             where: { userId },
             data: {
               status,
-              endDate: subscription.current_period_end
-                ? new Date(subscription.current_period_end * 1000)
+              endDate: (subscription as any).current_period_end
+                ? new Date((subscription as any).current_period_end * 1000)
                 : null,
             },
           });
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
-        const subId = invoice.subscription as string;
+        const subId = (invoice as any).subscription as string;
 
         if (subId) {
           await prisma.subscription.updateMany({

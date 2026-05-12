@@ -1,8 +1,7 @@
 import 'dotenv/config';
 import { runDailyFootballSync } from './lib/footballEngine';
 import { runDailyTennisSync } from './lib/tennisEngine';
-import { runDailyEsportsSync } from './lib/esportsEngine';
-import { runDailyHorseRacingSync } from './lib/horseRacingEngine';
+
 import prisma from './lib/prisma';
 
 async function main() {
@@ -15,11 +14,7 @@ async function main() {
     console.log('\n--- Tennis ---');
     await runDailyTennisSync();
 
-    console.log('\n--- eSports ---');
-    await runDailyEsportsSync();
 
-    console.log('\n--- Horse Racing ---');
-    await runDailyHorseRacingSync();
 
     console.log('\n✅ Total Sync Completed successfully.');
   } catch (error) {

@@ -135,8 +135,9 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
   }
 
 
-  let premiumPick = null;
-  let premiumMatch = null;
+  // eslint-disable-next-line prefer-const
+  let premiumPick: any = null;
+  let premiumMatch: any = null;
 
   if (isMainSport) {
     premiumPick = (matches as any[])
@@ -231,8 +232,6 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
                 { key: 'football', emoji: '⚽', label: 'Fútbol', href: (d: string, s: string) => `/football?day=${d}&sort=${s}` },
                 { key: 'basketball', emoji: '🏀', label: 'NBA', href: (d: string, s: string) => `/basketball?day=${d}&sort=${s}` },
                 { key: 'baseball', emoji: '⚾', label: 'MLB', href: (d: string, s: string) => `/baseball?day=${d}&sort=${s}` },
-                { key: 'esports', emoji: '🎮', label: 'eSports', href: () => '/esports' },
-                { key: 'horseracing', emoji: '🏇', label: 'Caballos', href: () => '/horseracing' },
               ].map(s => (
                 <Link key={s.key} href={s.href(day, sortBy)} className={`${styles.sportTab} ${sport === s.key ? styles[`active${s.key.charAt(0).toUpperCase() + s.key.slice(1)}`] : ''}`}>
                   <span className={styles.sportEmoji}>{s.emoji}</span> {s.label}
@@ -286,10 +285,10 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
           <div className={styles.premiumLabel}><span>⭐</span> PICK PREMIUM DEL DÍA</div>
           {isMainSport ? (
             sport === 'tennis' 
-              ? <TennisMatchCard match={premiumMatch} picks={[premiumPick]} />
-              : <FootballMatchCard match={premiumMatch} picks={[premiumPick]} featured={true} />
+              ? <TennisMatchCard match={premiumMatch as any} picks={[premiumPick]} />
+              : <FootballMatchCard match={premiumMatch as any} picks={[premiumPick]} featured={true} />
           ) : (
-            <div className={styles.premiumCardWrapper}>
+            <div style={{ maxWidth: '600px' }}>
               <MiniPickCard pick={premiumPick} sport={sport} featured={true} />
             </div>
           )}
@@ -345,7 +344,7 @@ export default async function DashboardView({ sport, day, sortBy = 'relevance' }
       )}
 
       <footer style={{ marginTop: '4rem', padding: '2rem', borderTop: '1px solid var(--border)', textAlign: 'center', opacity: 0.5 }}>
-        <div style={{ fontSize: '0.7rem', marginBottom: '0.5rem' }}>v2.1.0-deployed</div>
+        <div style={{ fontSize: '0.7rem', marginBottom: '0.5rem' }}>v2.2.0-stable</div>
         <div style={{ fontSize: '0.8rem' }}>© 2026 Búho Picks · Grupo VIP</div>
       </footer>
     </div>

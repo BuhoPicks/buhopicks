@@ -3,6 +3,14 @@
     {
       "path": "/api/automation/daily-sync?sport=all",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/automation/daily-sync?sport=tennis",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/automation/daily-sync?sport=football",
+      "schedule": "0 16 * * *"
     }
   ]
 }

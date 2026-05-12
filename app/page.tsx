@@ -8,8 +8,7 @@ import {
   getBasketballParlay, 
   getBaseballParlay 
 } from '@/lib/usSportsEngine';
-import { getEsportsPicks } from '@/lib/esportsEngine';
-import { getHorseRacingPick } from '@/lib/horseRacingEngine';
+
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -90,11 +89,9 @@ export default async function LandingPage() {
     day: '2-digit'
   }).format(new Date()).replace(/-/g, '');
 
-  const [{ tennisCount, footballCount }, laFija, esportsPicks, horseRacingPick] = await Promise.all([
+  const [{ tennisCount, footballCount }, laFija] = await Promise.all([
     getStats(),
     getLaFija(todayStr),
-    getEsportsPicks(),
-    getHorseRacingPick(),
   ]);
   
   // Parlays for the middle section
@@ -166,31 +163,7 @@ export default async function LandingPage() {
           </div>
         </Link>
 
-        <Link href="/esports" className={`${styles.landingCard} ${styles.cardEsports}`}>
-          <div className={styles.cardBadge}>NUEVO</div>
-          <div className={styles.cardEmoji}>🎮</div>
-          <div className={styles.cardContent}>
-            <h2 className={styles.cardTitle}>Panel eSports</h2>
-            <p className={styles.cardDesc}>LoL, CS2, Valorant, Dota 2</p>
-            <div className={styles.cardPreview}>
-              Top 3 picks del día
-            </div>
-            <span className={styles.cardAction}>Entrar →</span>
-          </div>
-        </Link>
 
-        <Link href="/horseracing" className={`${styles.landingCard} ${styles.cardHorseracing}`}>
-          <div className={styles.cardBadge}>NUEVO</div>
-          <div className={styles.cardEmoji}>🏇</div>
-          <div className={styles.cardContent}>
-            <h2 className={styles.cardTitle}>Carreras</h2>
-            <p className={styles.cardDesc}>Caballo ganador del día</p>
-            <div className={styles.cardPreview}>
-              1 pick premium diario
-            </div>
-            <span className={styles.cardAction}>Entrar →</span>
-          </div>
-        </Link>
       </div>
 
       {parlays.length > 0 && (
@@ -241,7 +214,7 @@ export default async function LandingPage() {
       )}
 
       <footer className={styles.landingFooter}>
-        <div style={{ opacity: 0.5, fontSize: '0.7rem', marginBottom: '1rem' }}>v2.1.1-force-sync</div>
+        <div style={{ opacity: 0.5, fontSize: '0.7rem', marginBottom: '1rem' }}>v2.2.0-stable</div>
         <Link href="/admin" className="btn btn-ghost">⚙️ Configuración y Sincronización Manual</Link>
       </footer>
     </div>

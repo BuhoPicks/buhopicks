@@ -472,8 +472,12 @@ export async function runDailyFootballSync() {
           }
         });
 
-        // Clear existing PENDING picks for this match to avoid duplicates/stale data without deleting history
-        await prisma.footballPick.deleteMany({ where: { matchId: match.id, status: 'PENDING' } });
+        // Only clear existing PENDING picks for matches that haven't started yet
+        // This protects published picks from earlier in the day from being erased
+        const now = new Date();
+        if (new Date(event.date) > now) {
+          await prisma.footballPick.deleteMany({ where: { matchId: match.id, status: 'PENDING' } });
+        }
 
         totalMatches++;
 

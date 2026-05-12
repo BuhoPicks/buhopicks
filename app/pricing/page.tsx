@@ -11,7 +11,7 @@ const plans = [
     name: 'Mensual',
     price: 400,
     period: '/mes',
-    features: ['Picks de Tenis (ATP, WTA, ITF)', 'Picks de Fútbol', 'Picks NBA & MLB', 'eSports & Carreras de Caballos', 'La Fija del Día', 'Parlays diarios'],
+    features: ['Picks de Tenis (ATP, WTA, ITF)', 'Picks de Fútbol Europeo', 'Picks NBA & MLB', 'La Fija del Día', 'Parlays diarios'],
     badge: '',
     savings: '',
   },
@@ -151,7 +151,7 @@ function PricingContent() {
         <p className={styles.guarantee}>
           🔒 Pago seguro procesado por Stripe · Cancela cuando quieras
         </p>
-        <div style={{ opacity: 0.3, fontSize: '0.7rem', marginTop: '2rem', textAlign: 'center' }}>v2.1.0-deployed</div>
+        <div style={{ opacity: 0.3, fontSize: '0.7rem', marginTop: '2rem', textAlign: 'center' }}>v2.2.0-stable</div>
       </div>
     </div>
   );

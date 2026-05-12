@@ -7,11 +7,12 @@ import styles from '@/app/page.module.css';
 interface MiniPickCardProps {
   pick: any;
   sport: string;
-  animClass: string;
+  animClass?: string;
   localTime?: string;
+  featured?: boolean;
 }
 
-export default function MiniPickCard({ pick, sport, animClass, localTime }: MiniPickCardProps) {
+export default function MiniPickCard({ pick, sport, animClass = '', localTime, featured }: MiniPickCardProps) {
   const matchup = sport === 'tennis'
     ? { player1: pick.parentMatch.player1Name, player2: pick.parentMatch.player2Name }
     : sport === 'football'
@@ -43,7 +44,7 @@ export default function MiniPickCard({ pick, sport, animClass, localTime }: Mini
         sport,
       }}
     >
-      <div className={`${styles.miniPickCard} ${animClass}`}>
+      <div className={`${styles.miniPickCard} ${animClass} ${featured ? styles.miniPickCardFeatured || '' : ''}`}>
         <div className={styles.miniPickMeta}>
           <span className={styles.miniTourn}>{tournament}</span>
           <span className={styles.miniCircuit}>

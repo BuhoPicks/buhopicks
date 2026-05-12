@@ -103,3 +103,108 @@
 @media (max-width: 768px) {
   .cardsGrid { grid-template-columns: 1fr; }
 }
+
+/* ── Edit Profile Form ── */
+.editBtn {
+  padding: 6px 14px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 8px;
+  color: #a5b4fc;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.editBtn:hover { background: rgba(99, 102, 241, 0.28); border-color: rgba(99, 102, 241, 0.6); }
+
+.editForm { display: flex; flex-direction: column; gap: 0.85rem; }
+
+.inputGroup { display: flex; flex-direction: column; gap: 5px; }
+.inputLabel { font-size: 0.75rem; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.editInput {
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  color: #F1F5F9;
+  font-size: 0.88rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  outline: none;
+}
+.editInput:focus { border-color: rgba(99, 102, 241, 0.6); background: rgba(99, 102, 241, 0.06); }
+.editInput::placeholder { color: #64748B; }
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0.25rem 0;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+}
+
+.editActions { display: flex; gap: 0.75rem; margin-top: 0.25rem; }
+
+.saveBtn {
+  flex: 1;
+  padding: 11px;
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+}
+.saveBtn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45); }
+.saveBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.cancelBtn {
+  padding: 11px 18px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  color: #94A3B8;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cancelBtn:hover { background: rgba(255,255,255,0.09); color: #F1F5F9; }
+
+.successBox {
+  padding: 10px 14px;
+  background: rgba(52, 211, 153, 0.10);
+  border: 1px solid rgba(52, 211, 153, 0.30);
+  border-radius: 8px;
+  color: #6EE7B7;
+  font-size: 0.83rem;
+  font-weight: 500;
+}
+.errorBox {
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.10);
+  border: 1px solid rgba(239, 68, 68, 0.30);
+  border-radius: 8px;
+  color: #FCA5A5;
+  font-size: 0.83rem;
+  font-weight: 500;
+}
+

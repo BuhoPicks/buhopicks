@@ -113,6 +113,7 @@ async function fetchTennisEvents(circuit: 'atp' | 'wta', dateStr: string): Promi
 /**
  * Build a realistic player profile from ESPN data + statistical inference.
  * When real data is available it's used; otherwise we infer from ranking.
+ * Uses DETERMINISTIC name-based seeds (no Math.random) → consistent picks per day.
  */
 function buildPlayerProfile(
   playerData: any,
@@ -138,32 +139,40 @@ function buildPlayerProfile(
   // ── Infer stats from ranking (research-based distributions) ──
   const rankFactor = ranking < 999 ? Math.max(0, 1 - Math.log(ranking + 1) / Math.log(400)) : 0.15;
 
-  const winRateOverall = 0.40 + rankFactor * 0.45 + (Math.random() * 0.05);
+  // Deterministic name hash for consistent per-player variance (replaces Math.random)
+  const nameHash = name.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0);
+  // Deterministic pseudo-random values based on nameHash
+  const det1 = ((nameHash * 1664525 + 1013904223) & 0x7fffffff) / 0x7fffffff;
+  const det2 = ((nameHash * 22695477 + 1) & 0x7fffffff) / 0x7fffffff;
+  const det3 = ((nameHash * 6364136223846793005 + 1442695040888963407) & 0x7fffffff) / 0x7fffffff;
+  const det4 = ((nameHash * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  const det5 = ((nameHash * 214013 + 2531011) & 0x7fffffff) / 0x7fffffff;
+
+  const winRateOverall = 0.40 + rankFactor * 0.45 + det1 * 0.05;
 
   // Surface specialisations
-  const nameHash = name.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0);
   const surfaceSpecialty = nameHash % 3; // 0=clay 1=grass 2=hard
 
-  let winRateClay  = winRateOverall * (surfaceSpecialty === 0 ? 1.12 : surfaceSpecialty === 1 ? 0.88 : 0.98);
-  let winRateGrass = winRateOverall * (surfaceSpecialty === 1 ? 1.15 : surfaceSpecialty === 0 ? 0.85 : 0.95);
-  let winRateHard  = winRateOverall * (surfaceSpecialty === 2 ? 1.08 : 1.00);
+  const winRateClay  = winRateOverall * (surfaceSpecialty === 0 ? 1.12 : surfaceSpecialty === 1 ? 0.88 : 0.98);
+  const winRateGrass = winRateOverall * (surfaceSpecialty === 1 ? 1.15 : surfaceSpecialty === 0 ? 0.85 : 0.95);
+  const winRateHard  = winRateOverall * (surfaceSpecialty === 2 ? 1.08 : 1.00);
 
-  // Service stats (Add more variance so they don't all look the same)
-  const baseServe = circuit === 'ATP' ? 0.62 : 0.58;
-  const firstServePerc = baseServe + rankFactor * 0.10 + (Math.random() * 0.08 - 0.04);
-  const firstServeWon  = 0.65 + rankFactor * 0.15 + (Math.random() * 0.10 - 0.05);
-  const secondServeWon = 0.45 + rankFactor * 0.12 + (Math.random() * 0.06 - 0.03);
-  const aceRate        = 0.01 + rankFactor * 0.10 + (Math.random() * 0.05);
-  const dfRate         = 0.05 - rankFactor * 0.02 + (Math.random() * 0.02);
-  const bpConverted    = 0.35 + rankFactor * 0.15 + (Math.random() * 0.10 - 0.05);
-  const bpSaved        = 0.50 + rankFactor * 0.20 + (Math.random() * 0.10 - 0.05);
+  // Service stats — deterministic variance per player
+  const baseServe    = circuit === 'ATP' ? 0.62 : 0.58;
+  const firstServePerc = baseServe + rankFactor * 0.10 + (det1 * 0.08 - 0.04);
+  const firstServeWon  = 0.65 + rankFactor * 0.15 + (det2 * 0.10 - 0.05);
+  const secondServeWon = 0.45 + rankFactor * 0.12 + (det3 * 0.06 - 0.03);
+  const aceRate        = 0.01 + rankFactor * 0.10 + det4 * 0.05;
+  const dfRate         = 0.05 - rankFactor * 0.02 + det5 * 0.02;
+  const bpConverted    = 0.35 + rankFactor * 0.15 + (det1 * 0.10 - 0.05);
+  const bpSaved        = 0.50 + rankFactor * 0.20 + (det2 * 0.10 - 0.05);
 
   const daysLastMatch = 1 + (nameHash % 5);  // 1-5 days
   const grandSlamRate = winRateOverall * (ranking <= 50 ? 1.05 : 0.90);
   const masters1000Rate = winRateOverall * (ranking <= 100 ? 1.02 : 0.92);
 
   const surfAvg = SURFACE_GAME_AVERAGES[surface] || 22.8;
-  const avgGamesPerSet = surfAvg / 2 + (rankFactor * 0.8 - 0.4); // top players win closer to 6-2 territory
+  const avgGamesPerSet = surfAvg / 2 + (rankFactor * 0.8 - 0.4);
 
   return {
     name,
@@ -190,6 +199,7 @@ function buildPlayerProfile(
     avgGamesPerSet: Number(avgGamesPerSet.toFixed(2)),
   };
 }
+
 
 // ─── Form Score Calculator ────────────────────────────────────────────────────
 
@@ -618,9 +628,14 @@ export async function runDailyTennisSync(): Promise<{
     lt:  new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate() + 2),
   };
 
-  // Clear existing PENDING picks for today/tomorrow to prevent duplicates e improve performance without deleting history
+  // Only clear PENDING picks for FUTURE matches (not yet started), to protect already-published picks.
+  // This prevents losing picks from matches that have already passed during the day.
+  const nowUTC = new Date();
   await prisma.tennisPick.deleteMany({
-    where: { match: { date: dateRange }, status: 'PENDING' }
+    where: { 
+      match: { date: { gte: nowUTC }, espnId: { not: null } },
+      status: 'PENDING'
+    }
   });
   
   // Note: We no longer delete TennisMatch here to avoid Foreign Key errors
