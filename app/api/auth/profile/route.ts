@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { stripe } from '@/lib/stripe';
 import { hash, compare } from 'bcryptjs';
 
 // PATCH /api/auth/profile — update name, email, or password
+// Also syncs email/name to Stripe if the user has a subscription
 export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,22 +17,27 @@ export async function PATCH(request: NextRequest) {
     const userId = (session.user as any).id;
     const { name, email, currentPassword, newPassword } = await request.json();
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    // Fetch user + subscription (to get stripeCustomerId)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { subscription: true },
+    });
     if (!user) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
 
     const updates: any = {};
 
-    // Update name
+    // ── Name ──────────────────────────────────────────────────────────────────
     if (name && name.trim() !== user.name) {
       updates.name = name.trim();
     }
 
-    // Update email — check it's not taken
-    if (email && email.toLowerCase().trim() !== user.email) {
+    // ── Email ─────────────────────────────────────────────────────────────────
+    const newEmail = email?.toLowerCase().trim();
+    if (newEmail && newEmail !== user.email) {
       const emailExists = await prisma.user.findUnique({
-        where: { email: email.toLowerCase().trim() },
+        where: { email: newEmail },
       });
       if (emailExists) {
         return NextResponse.json(
@@ -38,10 +45,10 @@ export async function PATCH(request: NextRequest) {
           { status: 409 }
         );
       }
-      updates.email = email.toLowerCase().trim();
+      updates.email = newEmail;
     }
 
-    // Update password
+    // ── Password ──────────────────────────────────────────────────────────────
     if (newPassword) {
       if (!currentPassword) {
         return NextResponse.json(
@@ -69,17 +76,36 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ message: 'No hay cambios para guardar' });
     }
 
+    // 1. Save changes in our database
     const updated = await prisma.user.update({
       where: { id: userId },
       data: updates,
     });
+
+    // 2. Sync to Stripe so billing portal & future invoices use the new email/name
+    //    This is the KEY FIX: without this, Stripe keeps showing the old email
+    const stripeCustomerId = (user as any).subscription?.stripeCustomerId;
+    if (stripeCustomerId) {
+      const stripeUpdates: any = {};
+      if (updates.email) stripeUpdates.email = updates.email;
+      if (updates.name)  stripeUpdates.name  = updates.name;
+
+      if (Object.keys(stripeUpdates).length > 0) {
+        try {
+          await stripe.customers.update(stripeCustomerId, stripeUpdates);
+        } catch (stripeErr) {
+          // Non-fatal: DB was updated, just log the Stripe failure
+          console.error('[profile] Stripe customer sync failed:', stripeErr);
+        }
+      }
+    }
 
     return NextResponse.json({
       message: 'Perfil actualizado correctamente',
       user: { name: updated.name, email: updated.email },
     });
   } catch (error) {
-    console.error('Profile update error:', error);
+    console.error('[profile] Update error:', error);
     return NextResponse.json({ error: 'Error al actualizar el perfil' }, { status: 500 });
   }
 }

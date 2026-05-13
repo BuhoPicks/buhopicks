@@ -44,10 +44,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Sync the current user email/name to Stripe before creating checkout
+    // This ensures the customer in Stripe always matches our DB
+    if (customerId) {
+      try {
+        await stripe.customers.update(customerId, {
+          email: session.user.email!,
+          name: session.user.name || undefined,
+        });
+      } catch { /* non-fatal */ }
+    }
+
     // Create Stripe Checkout Session
     const baseUrl = process.env.NEXTAUTH_URL || 'https://buhopicks.vercel.app';
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
+      // Allow the customer to update their email and shipping address in checkout
+      customer_update: {
+        email: 'auto',
+        name: 'auto',
+      },
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: selectedPlan.priceId, quantity: 1 }],
